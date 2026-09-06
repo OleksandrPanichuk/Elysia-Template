@@ -1,0 +1,12 @@
+{
+  "extends": "@repo/typescript-config/bun.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "rootDir": "src",
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  },
+  "include": ["src/**/*.ts", "eslint.config.js"],
+  "exclude": ["node_modules", "dist"]
+}
