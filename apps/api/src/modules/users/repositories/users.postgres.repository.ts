@@ -1,9 +1,9 @@
 import { eq } from "drizzle-orm";
 
-import { users } from "@/db";
+import { usersSchema } from "@/db";
 import { type DBExecutor, getExecutor } from "@/db/executor";
 
-import type { UserEntity } from "../users.entity";
+import { UserEntity } from "../user.entity";
 import { UserNotFoundError } from "../users.errors";
 import type { CreateUserData } from "../users.repository";
 import { UsersRepository } from "../users.repository";
@@ -18,20 +18,26 @@ export class PostgresUsersRepository extends UsersRepository {
   }
 
   public async insert(data: CreateUserData): Promise<UserEntity> {
-    const [user] = await this.db.insert(users).values(data).returning();
+    const [user] = await this.db
+      .insert(usersSchema)
+      .values({
+        name: data.name,
+        email: UserEntity.normalizeEmail(data.email),
+      })
+      .returning();
 
     return user!;
   }
 
   public list(): Promise<UserEntity[]> {
-    return this.db.select().from(users).orderBy(users.createdAt);
+    return this.db.select().from(usersSchema).orderBy(usersSchema.createdAt);
   }
 
   public async findById(id: string): Promise<UserEntity | null> {
     const [user] = await this.db
       .select()
-      .from(users)
-      .where(eq(users.id, id))
+      .from(usersSchema)
+      .where(eq(usersSchema.id, id))
       .limit(1);
 
     return user ?? null;
@@ -41,9 +47,26 @@ export class PostgresUsersRepository extends UsersRepository {
     const user = await this.findById(id);
 
     if (!user) {
-      throw new UserNotFoundError(`UserEntity ${id} not found`);
+      throw new UserNotFoundError(`User ${id} not found`);
     }
 
     return user;
+  }
+
+  public async findByEmail(email: string): Promise<UserEntity | null> {
+    const [user] = await this.db
+      .select()
+      .from(usersSchema)
+      .where(eq(usersSchema.email, UserEntity.normalizeEmail(email)))
+      .limit(1);
+
+    return user ?? null;
+  }
+
+  public async markEmailVerified(id: string, verifiedAt: Date): Promise<void> {
+    await this.db
+      .update(usersSchema)
+      .set({ emailVerifiedAt: verifiedAt })
+      .where(eq(usersSchema.id, id));
   }
 }

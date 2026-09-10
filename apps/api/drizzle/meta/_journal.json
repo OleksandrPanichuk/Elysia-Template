@@ -8,6 +8,20 @@
       "when": 1788684046412,
       "tag": "0000_amusing_karma",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1788774201764,
+      "tag": "0001_dazzling_hemingway",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1788940107075,
+      "tag": "0002_accounts",
+      "breakpoints": true
     }
   ]
 }

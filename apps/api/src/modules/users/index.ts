@@ -1,9 +1,10 @@
-export { CreateUserInput } from "./dto";
 export { PostgresUsersRepository } from "./repositories";
-export { CreateUserUseCase, ListUsersUseCase } from "./use-cases";
-export { UserEntity } from "./users.entity";
-export { UserModel } from "./users.model";
+export { UserEntity } from "./user.entity";
+export { UserModel } from "./user.model";
+export { UserAlreadyExistsError, UserNotFoundError } from "./users.errors";
 export { usersModule } from "./users.module";
 export { type CreateUserData, UsersRepository } from "./users.repository";
-export { type UsersActions, usersRoutes } from "./users.routes";
-export { UsersService } from "./users.service";
+export {
+  type CreateUserInput as CreateUserServiceInput,
+  UsersService,
+} from "./users.service";

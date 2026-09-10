@@ -5,7 +5,8 @@ import { Elysia } from "elysia";
 import { getCorsConfig } from "@/configs/cors.config";
 import type { AppModule } from "@/core/module";
 import { modules as defaultModules } from "@/modules";
-import { envPlugin, errorPlugin, loggerPlugin } from "@/plugins";
+import { getSessionCookieName, sessionsPlugin } from "@/modules/sessions";
+import { csrfPlugin, envPlugin, errorPlugin, loggerPlugin } from "@/plugins";
 
 export const createApp = (modules: readonly AppModule[] = defaultModules) => {
   modules.forEach((module) => module.register?.());
@@ -15,16 +16,18 @@ export const createApp = (modules: readonly AppModule[] = defaultModules) => {
     .use(errorPlugin)
     .use(envPlugin)
     .use(cors(getCorsConfig()))
+    .use(csrfPlugin)
+    .use(sessionsPlugin)
     .use(
       openapi({
         documentation: {
           info: { title: "API", version: "0.1.0" },
           components: {
             securitySchemes: {
-              bearerAuth: {
-                type: "http",
-                scheme: "bearer",
-                bearerFormat: "JWT",
+              sessionAuth: {
+                type: "apiKey",
+                in: "cookie",
+                name: getSessionCookieName(),
               },
             },
           },
@@ -32,7 +35,26 @@ export const createApp = (modules: readonly AppModule[] = defaultModules) => {
       }),
     );
 
-  return modules.reduce((app, module) => app.use(module.routes()), base);
+  return modules.reduce(
+    (app, module) => (module.routes ? app.use(module.routes()) : app),
+    base,
+  );
 };
 
 export type App = ReturnType<typeof createApp>;
+
+export const startModules = async (
+  modules: readonly AppModule[] = defaultModules,
+): Promise<void> => {
+  for (const module of modules) {
+    await module.start?.();
+  }
+};
+
+export const closeModules = async (
+  modules: readonly AppModule[] = defaultModules,
+): Promise<void> => {
+  for (const module of [...modules].reverse()) {
+    await module.shutdown?.();
+  }
+};

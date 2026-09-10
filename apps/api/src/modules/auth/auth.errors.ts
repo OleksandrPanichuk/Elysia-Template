@@ -1,0 +1,27 @@
+import { ModuleError } from "@/core/errors";
+import { HttpStatus } from "@/core/http";
+
+export class InvalidCredentialsError extends ModuleError {
+  public readonly status = HttpStatus.Unauthorized;
+  public readonly code = "INVALID_CREDENTIALS";
+}
+
+export class EmailAlreadyInUseError extends ModuleError {
+  public readonly status = HttpStatus.Conflict;
+  public readonly code = "EMAIL_ALREADY_IN_USE";
+}
+
+export class InvalidTokenError extends ModuleError {
+  public readonly status = HttpStatus.BadRequest;
+  public readonly code = "INVALID_TOKEN";
+}
+
+export class TokenExpiredError extends ModuleError {
+  public readonly status = HttpStatus.BadRequest;
+  public readonly code = "TOKEN_EXPIRED";
+}
+
+export class EmailNotVerifiedError extends ModuleError {
+  public readonly status = HttpStatus.Forbidden;
+  public readonly code = "EMAIL_NOT_VERIFIED";
+}

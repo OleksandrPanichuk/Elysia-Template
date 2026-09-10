@@ -1,7 +1,8 @@
-import type { UserEntity } from "./users.entity";
+import type { UserEntity } from "./user.entity";
 
 export interface CreateUserData {
   name: string;
+  email: string;
 }
 
 export abstract class UsersRepository {
@@ -9,4 +10,9 @@ export abstract class UsersRepository {
   public abstract list(): Promise<UserEntity[]>;
   public abstract findById(id: string): Promise<UserEntity | null>;
   public abstract getById(id: string): Promise<UserEntity>;
+  public abstract findByEmail(email: string): Promise<UserEntity | null>;
+  public abstract markEmailVerified(
+    id: string,
+    verifiedAt: Date,
+  ): Promise<void>;
 }

@@ -1,17 +1,21 @@
 import { makeRepository } from "@/core/registry";
 import { Service } from "@/core/service";
 
-import type { CreateUserData } from "./users.repository";
+import { UserEntity } from "./user.entity";
 import { UsersRepository } from "./users.repository";
+
+export interface CreateUserInput {
+  name: string;
+  email: string;
+}
 
 export class UsersService extends Service {
   private readonly repo = makeRepository(UsersRepository);
 
-  public create(data: CreateUserData) {
-    return this.repo.insert(data);
-  }
-
-  public list() {
-    return this.repo.list();
+  public async create({ name, email }: CreateUserInput): Promise<UserEntity> {
+    return this.repo.insert({
+      name,
+      email: UserEntity.normalizeEmail(email),
+    });
   }
 }

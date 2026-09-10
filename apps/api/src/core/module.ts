@@ -8,7 +8,11 @@ export interface AppModule {
 
   readonly register?: () => void;
 
-  readonly routes: () => AnyElysia;
+  readonly routes?: () => AnyElysia;
+
+  readonly start?: () => Promise<void>;
+
+  readonly shutdown?: () => Promise<void> | void;
 }
 
 export const defineModule = <const T extends AppModule>(module: T): T => module;

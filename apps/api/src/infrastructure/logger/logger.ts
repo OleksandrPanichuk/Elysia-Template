@@ -1,8 +1,9 @@
 import { type Logger, type LoggerOptions, pino } from "pino";
 import pretty from "pino-pretty";
 
-import { type Env, getEnv, LogLevel, NodeEnv } from "@/configs";
+import { type Env, getEnv, NodeEnv } from "@/configs";
 import { getRequestContext } from "@/shared";
+import { LogLevel } from "@/shared/types";
 
 export type AppLogger = Logger;
 

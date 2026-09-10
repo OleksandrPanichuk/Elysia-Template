@@ -6,16 +6,30 @@ services:
       target: dev
     environment:
       - NODE_ENV=development
+      - SESSIONS_REDIS_URL=redis://sessions:6379
+      - SMTP_URL=smtp://mailpit:1025
     ports:
       - "8080:8080"
     depends_on:
       db:
         condition: service_healthy
+      sessions:
+        condition: service_healthy
+      mailpit:
+        condition: service_started
     volumes:
       - ./apps/api:/app/apps/api
       - ./packages/typescript-config:/app/packages/typescript-config
       - /app/node_modules
       - /app/apps/api/node_modules
+    networks:
+      - main_network
+
+  mailpit:
+    image: axllent/mailpit:latest
+    ports:
+      - "1025:1025"
+      - "8025:8025"
     networks:
       - main_network
 
@@ -37,9 +51,65 @@ services:
       interval: 5s
       timeout: 3s
       retries: 1
+  sessions:
+    image: redis:7.4-alpine
+    command:
+      - redis-server
+      - --appendonly
+      - "yes"
+      - --appendfsync
+      - everysec
+      - --maxmemory
+      - 256mb
+      - --maxmemory-policy
+      - noeviction
+    ports:
+      - "6380:6379"
+    volumes:
+      - sessions_data:/data
+    networks:
+      - main_network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+
+  queue_redis:
+    image: redis:7.4-alpine
+    command: redis-server --appendonly yes
+    ports:
+      - "6379:6379"
+    volumes:
+      - queue_redis_data:/data
+    networks:
+      - main_network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+
+  bull_board:
+    image: ghcr.io/felixmosh/bull-board
+    environment:
+      - BULL_BOARD_REDIS_URL=redis://queue_redis:6379
+    ports:
+      - "3001:3000"
+    depends_on:
+      queue_redis:
+        condition: service_healthy
+    networks:
+      - main_network
 
 volumes:
   postgres_data:
+  sessions_data:
+  queue_redis_data:
 
 networks:
   main_network:

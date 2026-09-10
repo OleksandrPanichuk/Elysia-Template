@@ -121,6 +121,13 @@ export const config = [
           format: ["camelCase"],
           leadingUnderscore: "allow",
         },
+        // Readonly class fields may hold constants (SLEEP_DURATION_MS).
+        {
+          selector: "classProperty",
+          modifiers: ["readonly"],
+          format: ["camelCase", "UPPER_CASE"],
+          leadingUnderscore: "allow",
+        },
         // PascalCase permitted for React components / factories.
         { selector: "function", format: ["camelCase", "PascalCase"] },
         { selector: "typeLike", format: ["PascalCase"] },

@@ -1,15 +1,19 @@
 import { loadEnv, setEnv } from "@/configs";
-import { createApp } from "@/core/app";
+import { closeModules, createApp, startModules } from "@/core/app";
 import { closeDatabase } from "@/db";
 import { closeInfrastructure, getLogger } from "@/infrastructure";
 
-function bootstrap() {
+async function bootstrap() {
   const env = loadEnv();
   setEnv(env);
 
   const logger = getLogger();
 
-  const app = createApp().listen(env.PORT, ({ url }) => {
+  const app = createApp();
+
+  await startModules();
+
+  app.listen(env.PORT, ({ url }) => {
     logger.info({ url: String(url) }, `API is listening on PORT: ${env.PORT}`);
   });
 
@@ -23,6 +27,7 @@ function bootstrap() {
 
     try {
       await app.stop();
+      await closeModules();
       await closeDatabase();
     } catch (error) {
       logger.error({ err: error }, "shutdown failed");
@@ -37,9 +42,10 @@ function bootstrap() {
 }
 
 try {
-  bootstrap();
+  await bootstrap();
 } catch (error) {
   getLogger().fatal({ err: error }, "failed to start");
+  await closeModules().catch(() => undefined);
   await closeInfrastructure();
   process.exit(1);
 }

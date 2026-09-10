@@ -1,8 +1,14 @@
-import type { TSchema } from "elysia";
+import type { Context, TSchema } from "elysia";
 
 import type { AuthUser } from "./auth";
 
 type Static<S> = S extends TSchema ? S["static"] : never;
+
+type RawContext = Pick<Context, "request" | "headers" | "cookie" | "set"> & {
+  body: unknown;
+  params: unknown;
+  query: unknown;
+};
 
 type RouteContext<
   Body extends TSchema | undefined,
@@ -13,7 +19,19 @@ type RouteContext<
   body: Static<Body>;
   params: Static<Params>;
   query: Static<Query>;
+  request: Context["request"];
+  headers: Context["headers"];
+  cookie: Context["cookie"];
+  set: Context["set"];
 } & (Auth extends true ? { user: AuthUser } : object);
+
+type PostActionContext<
+  Body extends TSchema | undefined,
+  Params extends TSchema | undefined,
+  Query extends TSchema | undefined,
+  Auth extends boolean,
+  Out,
+> = RouteContext<Body, Params, Query, Auth> & { output: Out };
 
 export type RouteGuard<
   Body extends TSchema | undefined = undefined,
@@ -42,7 +60,7 @@ interface RouteBase<
 interface RouteDetail {
   summary?: string;
   description?: string;
-  security?: Array<{ bearerAuth: string[] }>;
+  security?: Array<{ sessionAuth: string[] }>;
 }
 
 type RouteHook<
@@ -65,11 +83,7 @@ type RouteTuple<
   Response extends TSchema,
   Auth extends boolean,
 > = readonly [
-  (context: {
-    body: unknown;
-    params: unknown;
-    query: unknown;
-  }) => Promise<Static<Response>>,
+  (context: RawContext) => Promise<Static<Response>>,
   RouteHook<Body, Params, Query, Response, Auth>,
 ];
 
@@ -85,7 +99,9 @@ export function defineRoute<
     action: (
       context: RouteContext<Body, Params, Query, Auth>,
     ) => Out | Promise<Out>;
-    mapOut: (output: Awaited<Out>) => Static<Response>;
+    postAction: (
+      context: PostActionContext<Body, Params, Query, Auth, Awaited<Out>>,
+    ) => Static<Response> | Promise<Static<Response>>;
   },
 ): RouteTuple<Body, Params, Query, Response, Auth>;
 
@@ -100,37 +116,37 @@ export function defineRoute<
     action: (
       context: RouteContext<Body, Params, Query, Auth>,
     ) => Static<Response> | Promise<Static<Response>>;
-    mapOut?: undefined;
+    postAction?: undefined;
   },
 ): RouteTuple<Body, Params, Query, Response, Auth>;
 
 export function defineRoute(
   definition: RouteBase<TSchema, TSchema, TSchema, TSchema, boolean> & {
     action: (context: RouteContext<TSchema, TSchema, TSchema>) => unknown;
-    mapOut?: (output: never) => unknown;
+    postAction?: (
+      context: RouteContext<TSchema, TSchema, TSchema> & { output: never },
+    ) => unknown;
   },
 ): RouteTuple<TSchema, TSchema, TSchema, TSchema, boolean> {
   const {
     response,
     action,
+    postAction,
     body,
     params,
     query,
-    mapOut,
     auth,
     guards,
     summary,
     description,
   } = definition;
 
-  const handler = async (context: {
-    body: unknown;
-    params: unknown;
-    query: unknown;
-  }): Promise<Static<TSchema>> => {
+  const handler = async (context: RawContext): Promise<Static<TSchema>> => {
     const output = await action(context);
 
-    return mapOut ? mapOut(output as never) : output;
+    return postAction
+      ? await postAction({ ...context, output: output as never })
+      : output;
   };
 
   const hook = {
@@ -143,7 +159,7 @@ export function defineRoute(
     detail: {
       ...(summary ? { summary } : {}),
       ...(description ? { description } : {}),
-      ...(auth ? { security: [{ bearerAuth: [] }] } : {}),
+      ...(auth ? { security: [{ sessionAuth: [] }] } : {}),
     },
   };
 

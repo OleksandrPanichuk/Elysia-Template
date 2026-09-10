@@ -1,13 +1,11 @@
 import { Elysia } from "elysia";
 
-import { AppError, ModuleError } from "@/core/errors";
+import { AppError } from "@/core/errors";
 import { HttpStatus } from "@/core/http";
 import { getLogger } from "@/infrastructure";
 
 export const errorPlugin = new Elysia({ name: "errors" })
   .onError(({ code, error, set, request }) => {
-    if (error instanceof ModuleError) return;
-
     if (code === "VALIDATION") {
       set.status = HttpStatus.UnprocessableEntity;
       return {
