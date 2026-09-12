@@ -3,6 +3,7 @@ export { accountsModule } from "./accounts.module";
 export {
   AccountsRepository,
   type CreateCredentialsAccountData,
+  type CreateOAuthAccountData,
 } from "./accounts.repository";
 export {
   AccountsService,

@@ -1,5 +1,6 @@
 import { makeRepository } from "@/core/registry";
 import { Service } from "@/core/service";
+import type { AccountType } from "@/db/schema/accounts.schema";
 import { UserEntity } from "@/modules/users/user.entity";
 
 import { AccountEntity } from "./account.entity";
@@ -39,5 +40,12 @@ export class AccountsService extends Service {
 
   public hashPassword(password: string): Promise<string> {
     return AccountEntity.hashPassword(password);
+  }
+
+  public async canUnlink(userId: string, type: AccountType): Promise<boolean> {
+    const accounts = await this.repository.listByUserId(userId);
+    const remaining = accounts.filter((account) => account.type !== type);
+
+    return remaining.length > 0;
   }
 }
