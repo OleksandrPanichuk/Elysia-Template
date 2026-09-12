@@ -1,5 +1,8 @@
 
-.PHONY: build logs migrate sh up down reset check generate db-generate db-migrate db-studio db-development db-shell
+.PHONY: build logs migrate sh up up-db run-all add drop services down reset check generate db-generate db-migrate db-studio db-development db-shell
+
+OPTIONAL_SERVICES := bull_board drizzle_studio
+ALL_PROFILES := $(shell echo '$(OPTIONAL_SERVICES)' | tr ' ' ',')
 
 DB_URL ?= postgres://postgres:postgres@localhost:5432/postgres
 
@@ -18,14 +21,44 @@ sh:
 up:
 	docker compose up
 
+run-all:
+	COMPOSE_PROFILES="$(ALL_PROFILES)" docker compose up
+
+add:
+ifndef s
+	$(error usage: make add s=<service>, one of: $(OPTIONAL_SERVICES))
+endif
+	@echo '$(OPTIONAL_SERVICES)' | tr ' ' '\n' | grep -qx '$(s)' \
+		|| { echo "unknown service '$(s)'; expected one of: $(OPTIONAL_SERVICES)"; exit 1; }
+	@project=$$(docker compose config --format json | sed -n 's/.*"name": *"\([^"]*\)".*/\1/p' | head -1); \
+	running=$$(docker ps --filter "label=com.docker.compose.project=$$project" \
+		--format '{{.Label "com.docker.compose.service"}}'); \
+	profiles=$$(printf '%s\n%s\n' "$$running" '$(s)' \
+		| grep -Fx $(foreach svc,$(OPTIONAL_SERVICES),-e $(svc)) \
+		| sort -u | paste -sd, -); \
+	echo "starting $(s) (profiles: $$profiles)"; \
+	COMPOSE_PROFILES="$$profiles" docker compose up -d --wait $(s)
+
+drop:
+ifndef s
+	$(error usage: make drop s=<service>, one of: $(OPTIONAL_SERVICES))
+endif
+	docker compose stop $(s)
+	docker compose rm -f $(s)
+
+services:
+	@project=$$(docker compose config --format json | sed -n 's/.*"name": *"\([^"]*\)".*/\1/p' | head -1); \
+	docker ps --filter "label=com.docker.compose.project=$$project" \
+		--format '{{.Label "com.docker.compose.service"}}' | sort
+
 up-db:
 	docker compose up -d --wait db
 
 down:
-	docker compose down
+	COMPOSE_PROFILES="$(ALL_PROFILES)" docker compose down --remove-orphans
 
 reset:
-	docker compose down -v
+	COMPOSE_PROFILES="$(ALL_PROFILES)" docker compose down -v --remove-orphans
 	docker compose up -d --wait
 
 check:

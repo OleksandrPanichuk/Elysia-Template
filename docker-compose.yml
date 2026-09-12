@@ -126,6 +126,8 @@ services:
 
   bull_board:
     image: ghcr.io/felixmosh/bull-board
+    profiles:
+      - bull_board
     environment:
       - BULL_BOARD_REDIS_URL=redis://queue_redis:6379
     ports:
@@ -135,6 +137,37 @@ services:
         condition: service_healthy
       cache:
         condition: service_healthy
+    networks:
+      - main_network
+
+  drizzle_studio:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+      target: dev
+    profiles:
+      - drizzle_studio
+    command:
+      - bunx
+      - --bun
+      - drizzle-kit
+      - studio
+      - --host
+      - 0.0.0.0
+      - --port
+      - "4983"
+    environment:
+      - NODE_ENV=development
+      - DATABASE_URL=postgres://postgres:postgres@db:5432/postgres
+    ports:
+      - "4983:4983"
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./apps/api:/app/apps/api
+      - /app/node_modules
+      - /app/apps/api/node_modules
     networks:
       - main_network
 
