@@ -46,7 +46,7 @@ export interface VerifyEmailInput {
 
 // modules/oauth/dto/oauth-authorize.dto.ts
 export interface OAuthProviderParams {
-  provider: import("/Users/oleksandrpanicuk/personal/projects/web/velo_version_2/apps/api/src/modules/oauth/oauth.constants").OAuthProviderName;
+  provider: "google" | "github";
 }
 
 export interface OAuthAuthorizeQuery {
@@ -67,7 +67,7 @@ export interface OAuthMessageModel {
 
 export interface LinkedOAuthProviderModel {
   email: string | null;
-  provider: import("/Users/oleksandrpanicuk/personal/projects/web/velo_version_2/apps/api/src/modules/oauth/oauth.constants").OAuthProviderName;
+  provider: "google" | "github";
   linkedAt: string | null;
 }
 

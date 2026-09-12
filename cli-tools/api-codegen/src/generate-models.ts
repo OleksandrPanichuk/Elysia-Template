@@ -33,6 +33,34 @@ const FORMAT_FLAGS =
   ts.TypeFormatFlags.InTypeAlias |
   ts.TypeFormatFlags.UseFullyQualifiedType;
 
+const IMPORT_REFERENCE_PATTERN = /import\("[^"]*"\)\./;
+
+const NULLISH_FLAGS = ts.TypeFlags.Null | ts.TypeFlags.Undefined;
+
+const expandType = (checker: TS.TypeChecker, type: TS.Type): string => {
+  if (type.isUnion()) {
+    const nullish = type.types.filter((member) => member.flags & NULLISH_FLAGS);
+    const rest = type.types.filter((member) => !(member.flags & NULLISH_FLAGS));
+
+    return [...rest, ...nullish]
+      .map((member) => expandType(checker, member))
+      .join(" | ");
+  }
+
+  if (type.isStringLiteral()) return JSON.stringify(type.value);
+  if (type.isNumberLiteral()) return String(type.value);
+
+  return checker.typeToString(type, undefined, FORMAT_FLAGS);
+};
+
+const renderMember = (checker: TS.TypeChecker, property: TS.Symbol): string => {
+  const type = checker.getTypeOfSymbol(property);
+  const optional = Boolean(property.flags & ts.SymbolFlags.Optional);
+  const rendered = expandType(checker, type);
+
+  return `${property.getName()}${optional ? "?" : ""}: ${rendered}`;
+};
+
 const formatMembers = (rendered: string): string | undefined => {
   const trimmed = rendered.trim();
 
@@ -68,7 +96,13 @@ const collect = (program: ReturnType<typeof loadProgram>) => {
     for (const exported of checker.getExportsOfModule(moduleSymbol)) {
       const declared = checker.getDeclaredTypeOfSymbol(exported);
       const rendered = checker.typeToString(declared, undefined, FORMAT_FLAGS);
-      const members = formatMembers(rendered);
+
+      const members = IMPORT_REFERENCE_PATTERN.test(rendered)
+        ? checker
+            .getPropertiesOfType(declared)
+            .map((property) => `  ${renderMember(checker, property)};`)
+            .join("\n")
+        : formatMembers(rendered);
 
       if (members === undefined) continue;
 
