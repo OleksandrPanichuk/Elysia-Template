@@ -43,11 +43,37 @@ make up
 | API | <http://localhost:8080> | routes are served under `/api` |
 | OpenAPI | <http://localhost:8080/api/openapi> | generated from the route definitions |
 | Mailpit | <http://localhost:8025> | catches every outbound email in development |
-| Bull Board | <http://localhost:3001> | background job queues |
 | Postgres | `localhost:5432` | `postgres` / `postgres` |
 
 Redis runs three times, one instance per concern: sessions (6380), jobs (6379)
 and cache (6381). They are separate so a flushed cache cannot sign everyone out.
+All three start with `make up`, because outside `NODE_ENV=test` the API requires
+every one of them and exits at startup if any is missing.
+
+### Optional services
+
+Two services are behind [compose
+profiles](https://docs.docker.com/compose/how-tos/profiles/) and stay off by
+default. Nothing depends on them, so they are pure opt-in:
+
+| Service | URL | Notes |
+| --- | --- | --- |
+| `bull_board` | <http://localhost:3001> | background job queues |
+| `drizzle_studio` | <https://local.drizzle.studio?host=localhost&port=4983> | browse the database |
+
+```sh
+make add s=bull_board       # start one alongside whatever is already running
+make drop s=drizzle_studio  # stop and remove one
+make services               # list what is running
+make run-all                # everything, optional services included
+```
+
+`make add` is additive: it reads the running containers and preserves them, so
+adding a second optional service does not stop the first.
+
+Drizzle Studio serves a gateway rather than a web page, so port 4983 returns
+`404` in a browser — open the `local.drizzle.studio` link above, which connects
+back to it. `make db-studio` runs the same thing on the host instead.
 
 ## Running locally without Docker
 
@@ -124,7 +150,9 @@ bun run generate      # regenerate the API client
 bun run format        # prettier --write
 ```
 
-`make check` runs lint, types and tests the way CI does.
+`make check` runs lint, types and tests the way CI does. `make services` lists
+the running containers; see [optional services](#optional-services) for
+`make add` and `make run-all`.
 
 ## Configuration
 
