@@ -3,6 +3,7 @@ import { openapi } from "@elysiajs/openapi";
 import { Elysia } from "elysia";
 
 import { getCorsConfig } from "@/configs/cors.config";
+import type { RoutedApp } from "@/core/app.routes";
 import type { AppModule } from "@/core/module";
 import { modules as defaultModules } from "@/modules";
 import { cachePlugin } from "@/modules/cache";
@@ -43,7 +44,7 @@ export const createApp = (modules: readonly AppModule[] = defaultModules) => {
   );
 };
 
-export type App = ReturnType<typeof createApp>;
+export type App = RoutedApp;
 
 export const startModules = async (
   modules: readonly AppModule[] = defaultModules,

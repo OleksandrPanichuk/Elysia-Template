@@ -10,7 +10,7 @@ import { sessionsModule } from "./sessions";
 import { usersModule } from "./users";
 import { verificationTokensModule } from "./verification-tokens";
 
-export const modules: readonly AppModule[] = [
+export const modules = [
   healthModule,
   sessionsModule,
   cacheModule,
@@ -20,4 +20,4 @@ export const modules: readonly AppModule[] = [
   authModule,
   verificationTokensModule,
   jobsModule,
-];
+] as const satisfies readonly AppModule[];

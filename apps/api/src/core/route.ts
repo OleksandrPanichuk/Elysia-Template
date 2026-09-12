@@ -74,7 +74,7 @@ interface RouteBase<
   description?: string;
 }
 
-interface RouteDetail {
+export interface RouteDetail {
   summary?: string;
   description?: string;
   security?: Array<{ sessionAuth: string[] }>;

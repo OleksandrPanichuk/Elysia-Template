@@ -1,0 +1,13 @@
+import { openapi } from "@elysiajs/openapi";
+import { Elysia } from "elysia";
+
+import { modules } from "@/modules";
+
+export const createOpenApiApp = () => {
+  const base = new Elysia({ name: "api", prefix: "/api" }).use(openapi());
+
+  return modules.reduce(
+    (app, module) => (module.routes ? app.use(module.routes()) : app),
+    base,
+  );
+};

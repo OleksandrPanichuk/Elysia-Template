@@ -19,12 +19,16 @@ export interface ModuleLifecycleContext<State> extends ModuleContext {
   readonly state: State;
 }
 
-export interface ModuleDefinition<State = void> {
-  readonly name: string;
+export interface ModuleDefinition<
+  State = void,
+  Name extends string = string,
+  Routes extends AnyElysia | undefined = AnyElysia | undefined,
+> {
+  readonly name: Name;
 
   readonly register?: (ctx: ModuleContext) => State;
 
-  readonly routes?: () => AnyElysia;
+  readonly routes?: () => Routes;
 
   readonly start?: (ctx: ModuleLifecycleContext<State>) => MaybePromise<void>;
 
@@ -37,9 +41,12 @@ export interface ModuleDefinition<State = void> {
   ) => MaybePromise<void>;
 }
 
-export interface AppModule {
-  readonly name: string;
-  readonly routes?: () => AnyElysia;
+export interface AppModule<
+  Name extends string = string,
+  Routes extends AnyElysia | undefined = AnyElysia | undefined,
+> {
+  readonly name: Name;
+  readonly routes?: () => Routes;
   register(): void;
   start(): Promise<void>;
   shutdown(): Promise<void>;
@@ -58,9 +65,13 @@ const isPromiseLike = (value: unknown): value is PromiseLike<unknown> =>
   value !== null &&
   typeof (value as { then?: unknown }).then === "function";
 
-export const defineModule = <State = void>(
-  def: ModuleDefinition<State> & SyncRegister<State>,
-): AppModule => {
+export const defineModule = <
+  const Name extends string,
+  Routes extends AnyElysia | undefined = undefined,
+  State = void,
+>(
+  def: ModuleDefinition<State, Name, Routes> & SyncRegister<State>,
+): AppModule<Name, Routes> => {
   let lifecycle: ModuleLifecycleContext<State> | undefined;
   let unregisterReadiness: (() => void) | undefined;
 
