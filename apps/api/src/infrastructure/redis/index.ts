@@ -1,1 +1,1 @@
-export * from "./sessions-redis.client";
+export * from "./redis.connection";

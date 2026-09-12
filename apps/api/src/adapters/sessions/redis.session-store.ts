@@ -1,9 +1,9 @@
-import type { RedisClient } from "bun";
+import type { Redis } from "ioredis";
 import z from "zod";
 
 import { getEnv } from "@/configs";
 import { getLogger } from "@/infrastructure";
-import { getSessionsRedis } from "@/infrastructure/redis";
+import type { RedisConnection } from "@/infrastructure/redis";
 import type { SessionEntity } from "@/modules/sessions/session.entity";
 import { SessionStore } from "@/modules/sessions/session.store";
 import { SessionStoreUnavailableError } from "@/modules/sessions/sessions.errors";
@@ -23,7 +23,7 @@ class CorruptSessionError extends Error {}
 
 export class RedisSessionStore extends SessionStore {
   constructor(
-    private readonly resolveClient: () => Promise<RedisClient> = getSessionsRedis,
+    private readonly connection: RedisConnection,
     private readonly keyPrefix = getEnv().SESSIONS_KEY_PREFIX,
   ) {
     super();
@@ -31,24 +31,20 @@ export class RedisSessionStore extends SessionStore {
 
   public create(tokenHash: string, session: SessionEntity): Promise<boolean> {
     return this.execute(async (client) => {
-      const result: unknown = await client.send("SET", [
+      const result = await client.set(
         this.key(tokenHash),
         JSON.stringify(session),
-        "NX",
         "PXAT",
-        String(session.expiresAt),
-      ]);
+        session.expiresAt,
+        "NX",
+      );
 
       if (result !== "OK") return false;
 
       const indexKey = this.userKey(session.userId);
 
-      await client.send("SADD", [indexKey, tokenHash]);
-      await client.send("PEXPIREAT", [
-        indexKey,
-        String(session.expiresAt),
-        "GT",
-      ]);
+      await client.sadd(indexKey, tokenHash);
+      await client.pexpireat(indexKey, session.expiresAt, "GT");
 
       return true;
     });
@@ -79,7 +75,7 @@ export class RedisSessionStore extends SessionStore {
       const session = this.tryDecode(value, tokenHash);
 
       if (session) {
-        await client.send("SREM", [this.userKey(session.userId), tokenHash]);
+        await client.srem(this.userKey(session.userId), tokenHash);
       }
     });
   }
@@ -87,12 +83,10 @@ export class RedisSessionStore extends SessionStore {
   public deleteByUserId(userId: string): Promise<void> {
     return this.execute(async (client) => {
       const indexKey = this.userKey(userId);
-      const members: unknown = await client.send("SMEMBERS", [indexKey]);
+      const members = await client.smembers(indexKey);
 
-      if (Array.isArray(members) && members.length > 0) {
-        await client.send("DEL", [
-          ...members.map((member) => this.key(String(member))),
-        ]);
+      if (members.length > 0) {
+        await client.del(...members.map((member) => this.key(member)));
       }
 
       await client.del(indexKey);
@@ -142,7 +136,7 @@ export class RedisSessionStore extends SessionStore {
   }
 
   private async execute<T>(
-    operation: (client: RedisClient) => Promise<T>,
+    operation: (client: Redis) => Promise<T>,
   ): Promise<T> {
     let timer: ReturnType<typeof setTimeout> | undefined;
 
@@ -154,7 +148,7 @@ export class RedisSessionStore extends SessionStore {
       });
 
       return await Promise.race([
-        this.resolveClient().then(operation),
+        this.connection.connect().then(operation),
         timeout,
       ]);
     } catch (error) {
