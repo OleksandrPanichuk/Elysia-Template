@@ -5,10 +5,17 @@ import { join, resolve } from "node:path";
 const REPO_ROOT = resolve(import.meta.dir, "../../..");
 const COMMITTED = join(REPO_ROOT, "packages/api-client/src/generated");
 
+const PLACEHOLDER_DATABASE_URL =
+  "postgresql://codegen:codegen@localhost:5432/codegen";
+
 const run = async (command: string[], cwd: string): Promise<void> => {
   const proc = Bun.spawn(command, {
     cwd,
-    env: { ...process.env, NODE_ENV: "test" },
+    env: {
+      ...process.env,
+      NODE_ENV: "test",
+      DATABASE_URL: process.env.DATABASE_URL ?? PLACEHOLDER_DATABASE_URL,
+    },
     stdout: "inherit",
     stderr: "inherit",
   });

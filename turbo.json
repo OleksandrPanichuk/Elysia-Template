@@ -8,7 +8,8 @@
       "outputs": ["dist/**"]
     },
     "check-generated": {
-      "cache": false
+      "cache": false,
+      "env": ["DATABASE_URL", "NODE_ENV"]
     },
     "check-types": {
       "dependsOn": ["^check-types"]
@@ -18,7 +19,8 @@
       "persistent": true
     },
     "generate": {
-      "cache": false
+      "cache": false,
+      "env": ["DATABASE_URL", "NODE_ENV"]
     },
     "lint": {
       "dependsOn": ["^lint"]

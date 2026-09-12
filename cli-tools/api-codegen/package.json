@@ -6,7 +6,7 @@
   "scripts": {
     "check-generated": "bun src/check-generated.ts",
     "check-types": "tsc --noEmit && tsc -p guard/tsconfig.json --noEmit",
-    "generate": "NODE_ENV=test bun src/generate-models.ts && NODE_ENV=test bun --cwd ../../apps/api ../../cli-tools/api-codegen/src/generate-client.ts",
+    "generate": "DATABASE_URL=\"${DATABASE_URL:-postgresql://codegen:codegen@localhost:5432/codegen}\" NODE_ENV=test bun src/generate-models.ts && DATABASE_URL=\"${DATABASE_URL:-postgresql://codegen:codegen@localhost:5432/codegen}\" NODE_ENV=test bun --cwd ../../apps/api ../../cli-tools/api-codegen/src/generate-client.ts",
     "lint": "eslint . --max-warnings 0"
   },
   "devDependencies": {
