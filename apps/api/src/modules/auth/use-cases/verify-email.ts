@@ -1,7 +1,7 @@
-import { makeRepository } from "@/core/registry";
+import { makeRepository, makeService } from "@/core/registry";
 import { UseCase } from "@/core/use-case";
 import { transaction } from "@/db/executor";
-import { UsersRepository } from "@/modules/users";
+import { UsersService } from "@/modules/users";
 import {
   VerificationTokenEntity,
   VerificationTokensRepository,
@@ -21,7 +21,7 @@ export class VerifyEmailUseCase extends UseCase<Options, Result> {
     VerificationTokensRepository,
   );
 
-  private readonly usersRepository = makeRepository(UsersRepository);
+  private readonly usersService = makeService(UsersService);
 
   private readonly runInTransaction = transaction;
 
@@ -34,7 +34,7 @@ export class VerifyEmailUseCase extends UseCase<Options, Result> {
 
     const tokenHash = VerificationTokenEntity.hash(token);
 
-    await this.runInTransaction(async () => {
+    const userId = await this.runInTransaction(async () => {
       const verificationToken =
         await this.tokensRepository.findActiveByTokenHash(
           tokenHash,
@@ -55,7 +55,7 @@ export class VerifyEmailUseCase extends UseCase<Options, Result> {
         throw this.invalidToken();
       }
 
-      await this.usersRepository.markEmailVerified(
+      await this.usersService.markEmailVerified(
         verificationToken.userId,
         consumedAt,
       );
@@ -65,7 +65,11 @@ export class VerifyEmailUseCase extends UseCase<Options, Result> {
         "email_verification",
         consumedAt,
       );
+
+      return verificationToken.userId;
     });
+
+    await this.usersService.invalidate(userId);
   }
 
   private invalidToken(): InvalidTokenError {

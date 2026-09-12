@@ -1,4 +1,8 @@
 export { PostgresUsersRepository } from "./repositories";
+export {
+  GetCurrentUserUseCase,
+  type GetCurrentUserUseCaseOptions,
+} from "./use-cases";
 export { UserEntity } from "./user.entity";
 export { UserModel } from "./user.model";
 export { UserAlreadyExistsError, UserNotFoundError } from "./users.errors";
