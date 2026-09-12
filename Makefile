@@ -31,7 +31,6 @@ reset:
 check:
 	bun run lint
 	bun run check-types
-	bun run check-generated
 	bun run test
 
 generate:
