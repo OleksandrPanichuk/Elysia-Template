@@ -1,23 +1,27 @@
 import { LogMailer } from "@/adapters/mail/log.mailer";
 import { SmtpMailer } from "@/adapters/mail/smtp.mailer";
-import { getEnv, NodeEnv } from "@/configs";
+import { NodeEnv } from "@/configs";
 import { defineModule } from "@/core/module";
-import { bind, make } from "@/core/registry";
+import { bind } from "@/core/registry";
+import { registerJob } from "@/modules/jobs";
 
+import { SendEmailJob } from "./jobs";
 import { Mailer } from "./ports/mailer";
 
 export const notificationsModule = defineModule({
   name: "notifications",
 
-  register: () => {
-    const env = getEnv();
+  register: ({ env }) => {
+    const mailer: Mailer =
+      env.NODE_ENV === NodeEnv.Test ? new LogMailer() : new SmtpMailer(env);
 
-    bind(Mailer, () =>
-      env.NODE_ENV === NodeEnv.Test ? new LogMailer() : new SmtpMailer(),
-    );
+    bind(Mailer, () => mailer);
+    registerJob(SendEmailJob);
+
+    return { mailer };
   },
 
-  start: () => make(Mailer).verify(),
+  start: ({ state }) => state.mailer.verify(),
 
-  shutdown: () => make(Mailer).close(),
+  shutdown: ({ state }) => state.mailer.close(),
 });

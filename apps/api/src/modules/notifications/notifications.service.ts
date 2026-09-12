@@ -1,11 +1,8 @@
 import { make } from "@/core/registry";
 import { Service } from "@/core/service";
 
-import { Mailer } from "./ports";
-import {
-  renderEmailVerificationEmail,
-  renderPasswordResetEmail,
-} from "./templates";
+import { SendEmailJob } from "./jobs";
+import { EmailKind } from "./notifications.constants";
 
 interface AuthNotificationRecipient {
   userId: string;
@@ -24,37 +21,29 @@ interface SendPasswordResetOptions extends AuthNotificationRecipient {
 }
 
 export class NotificationsService extends Service {
-  private readonly mailer = make(Mailer);
+  private readonly sendEmail = make(SendEmailJob);
 
   public sendEmailVerification(
     options: SendEmailVerificationOptions,
   ): Promise<void> {
     const { userId, email, name, verificationUrl, expiresInHours } = options;
 
-    const content = renderEmailVerificationEmail({
-      name,
-      actionUrl: verificationUrl,
-      expirationText: `This link will expire in ${expiresInHours} hours.`,
-    });
-
-    return this.mailer.send({
+    return this.sendEmail.dispatch({
+      kind: EmailKind.EmailVerification,
       to: { userId, email, name },
-      ...content,
+      verificationUrl,
+      expiresInHours,
     });
   }
 
   public sendPasswordReset(options: SendPasswordResetOptions): Promise<void> {
     const { userId, email, name, resetUrl, expiresInMinutes } = options;
 
-    const content = renderPasswordResetEmail({
-      name,
-      actionUrl: resetUrl,
-      expirationText: `This password reset link expires in ${expiresInMinutes} minutes.`,
-    });
-
-    return this.mailer.send({
+    return this.sendEmail.dispatch({
+      kind: EmailKind.PasswordReset,
       to: { userId, email, name },
-      ...content,
+      resetUrl,
+      expiresInMinutes,
     });
   }
 }
