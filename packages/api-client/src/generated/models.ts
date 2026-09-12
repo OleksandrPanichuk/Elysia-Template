@@ -10,6 +10,13 @@ export interface AuthMessageModel {
   message: string;
 }
 
+export interface ConnectedAccountModel {
+  email: string | null;
+  type: "CREDENTIALS" | "GITHUB" | "GOOGLE";
+  connectedAt: string;
+  canDisconnect: boolean;
+}
+
 // modules/auth/dto/reset-password.dto.ts
 export interface ResetPasswordInput {
   token: string;

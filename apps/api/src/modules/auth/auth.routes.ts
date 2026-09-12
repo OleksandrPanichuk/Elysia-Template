@@ -4,6 +4,7 @@ import type { Executable } from "@/core/use-case";
 
 import { InvalidCredentialsError } from "./auth.errors";
 import {
+  listConnectedAccountsRoute,
   resetPasswordRoute,
   sendEmailVerificationTokenRoute,
   sendResetPasswordTokenRoute,
@@ -13,6 +14,7 @@ import {
   verifyEmailRoute,
 } from "./routes";
 import type {
+  ListConnectedAccountsUseCase,
   ResetPasswordUseCase,
   SendEmailVerificationTokenUseCase,
   SendResetPasswordTokenUseCase,
@@ -24,6 +26,7 @@ import type {
 
 export interface AuthActions {
   signIn: Executable<SignInUseCase>;
+  listConnectedAccounts: Executable<ListConnectedAccountsUseCase>;
   signUp: Executable<SignUpUseCase>;
   signOut: Executable<SignOutUseCase>;
   verifyEmail: Executable<VerifyEmailUseCase>;
@@ -40,6 +43,7 @@ export const authRoutes = (actions: AuthActions) =>
         return { code: error.code, error: error.message, module: "auth" };
       }
     })
+    .get("/accounts", ...listConnectedAccountsRoute(actions))
     .post("/sign-in", ...signInRoute(actions))
     .post("/sign-up", ...signUpRoute(actions))
     .post("/sign-out", ...signOutRoute(actions))
