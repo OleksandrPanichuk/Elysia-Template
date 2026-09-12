@@ -3,6 +3,36 @@
 export interface Routes {
   api: {
     auth: {
+      oauth: {
+        (provider: string | number): {
+          /** Start OAuth sign-in */
+          get: {
+            response: unknown;
+          };
+          callback: {
+            /** Complete OAuth sign-in */
+            get: {
+              response: unknown;
+            };
+          };
+          link: {
+            /** Start linking an OAuth provider */
+            post: {
+              response: unknown;
+              auth: true;
+            };
+          };
+          unlink: {
+            /** Unlink an OAuth provider */
+            post: {
+              response: {
+                message: string;
+              };
+              auth: true;
+            };
+          };
+        };
+      };
       resetPassword: {
         /** Reset password */
         post: {
@@ -121,6 +151,10 @@ export interface Routes {
 }
 
 export const routePaths = {
+  "api.auth.oauth.:param.callback.get": "/api/auth/oauth/{provider}/callback",
+  "api.auth.oauth.:param.get": "/api/auth/oauth/{provider}",
+  "api.auth.oauth.:param.link.post": "/api/auth/oauth/{provider}/link",
+  "api.auth.oauth.:param.unlink.post": "/api/auth/oauth/{provider}/unlink",
   "api.auth.resetPassword.post": "/api/auth/reset-password",
   "api.auth.sendEmailVerificationToken.post": "/api/auth/send-email-verification-token",
   "api.auth.sendResetPasswordToken.post": "/api/auth/send-reset-password-token",
