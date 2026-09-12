@@ -8,6 +8,7 @@ services:
       - NODE_ENV=development
       - SESSIONS_REDIS_URL=redis://sessions:6379
       - JOBS_REDIS_URL=redis://queue_redis:6379
+      - CACHE_REDIS_URL=redis://cache:6379
       - SMTP_URL=smtp://mailpit:1025
     ports:
       - "8080:8080"
@@ -17,6 +18,8 @@ services:
       sessions:
         condition: service_healthy
       queue_redis:
+        condition: service_healthy
+      cache:
         condition: service_healthy
       mailpit:
         condition: service_started
@@ -97,6 +100,30 @@ services:
       retries: 5
       start_period: 5s
 
+  cache:
+    image: redis:7.4-alpine
+    command:
+      - redis-server
+      - --save
+      - ""
+      - --appendonly
+      - "no"
+      - --maxmemory
+      - 128mb
+      - --maxmemory-policy
+      - allkeys-lru
+    ports:
+      - "6381:6379"
+    networks:
+      - main_network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+
   bull_board:
     image: ghcr.io/felixmosh/bull-board
     environment:
@@ -105,6 +132,8 @@ services:
       - "3001:3000"
     depends_on:
       queue_redis:
+        condition: service_healthy
+      cache:
         condition: service_healthy
     networks:
       - main_network

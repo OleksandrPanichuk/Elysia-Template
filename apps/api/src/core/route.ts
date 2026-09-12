@@ -33,6 +33,22 @@ type PostActionContext<
   Out,
 > = RouteContext<Body, Params, Query, Auth> & { output: Out };
 
+export interface RouteCacheOptions<
+  Body extends TSchema | undefined = undefined,
+  Params extends TSchema | undefined = undefined,
+  Query extends TSchema | undefined = undefined,
+  Auth extends boolean = false,
+> {
+  ttlMs: number;
+  key?: (context: RouteContext<Body, Params, Query, Auth>) => string;
+}
+
+export interface RouteCacheHook {
+  ttlMs: number;
+  key?: (context: RouteContext<TSchema, TSchema, TSchema>) => string;
+  response: TSchema;
+}
+
 export type RouteGuard<
   Body extends TSchema | undefined = undefined,
   Params extends TSchema | undefined = undefined,
@@ -52,6 +68,7 @@ interface RouteBase<
   params?: Params;
   query?: Query;
   auth?: Auth;
+  cache?: RouteCacheOptions<Body, Params, Query, Auth>;
   guards?: Array<RouteGuard<Body, Params, Query, Auth>>;
   summary?: string;
   description?: string;
@@ -69,9 +86,11 @@ type RouteHook<
   Query extends TSchema | undefined,
   Response extends TSchema,
   Auth extends boolean,
-> = { response: Response; detail: RouteDetail } & (Auth extends true
-  ? { auth: true }
-  : object) &
+> = {
+  response: Response;
+  detail: RouteDetail;
+  cache?: RouteCacheHook;
+} & (Auth extends true ? { auth: true } : object) &
   (Body extends TSchema ? { body: Body } : object) &
   (Params extends TSchema ? { params: Params } : object) &
   (Query extends TSchema ? { query: Query } : object);
@@ -136,6 +155,7 @@ export function defineRoute(
     params,
     query,
     auth,
+    cache,
     guards,
     summary,
     description,
@@ -155,6 +175,15 @@ export function defineRoute(
     ...(query ? { query } : {}),
     ...(guards?.length ? { beforeHandle: guards } : {}),
     ...(auth ? { auth: true as const } : {}),
+    ...(cache
+      ? {
+          cache: {
+            ttlMs: cache.ttlMs,
+            key: cache.key,
+            response,
+          },
+        }
+      : {}),
     response,
     detail: {
       ...(summary ? { summary } : {}),

@@ -68,6 +68,7 @@ export const EnvSchema = z.object({
   SMTP_URL: z.url({ protocol: /^smtp$/ }).optional(),
 
   JOBS_REDIS_URL: z.url({ protocol: /^rediss?$/ }).optional(),
+  CACHE_REDIS_URL: z.url({ protocol: /^rediss?$/ }).optional(),
 });
 
 export type Env = z.infer<typeof EnvSchema>;
@@ -99,6 +100,7 @@ const CheckedEnvSchema = EnvSchema.superRefine(
     "SESSIONS_REDIS_URL",
     "SMTP_URL",
     "JOBS_REDIS_URL",
+    "CACHE_REDIS_URL",
   ),
 );
 
