@@ -69,6 +69,19 @@ export const EnvSchema = z.object({
 
   JOBS_REDIS_URL: z.url({ protocol: /^rediss?$/ }).optional(),
   CACHE_REDIS_URL: z.url({ protocol: /^rediss?$/ }).optional(),
+
+  OAUTH_STATE_SECRET: z.string().min(32).optional(),
+  OAUTH_REDIRECT_BASE: z
+    .url({ protocol: /^https?$/ })
+    .refine(
+      (value) => new URL(value).origin === value,
+      "Use an exact origin without a path or trailing slash",
+    )
+    .optional(),
+  GOOGLE_CLIENT_ID: z.string().min(1).optional(),
+  GOOGLE_CLIENT_SECRET: z.string().min(1).optional(),
+  GITHUB_CLIENT_ID: z.string().min(1).optional(),
+  GITHUB_CLIENT_SECRET: z.string().min(1).optional(),
 });
 
 export type Env = z.infer<typeof EnvSchema>;

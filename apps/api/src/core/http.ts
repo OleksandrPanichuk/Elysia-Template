@@ -2,6 +2,7 @@ export enum HttpStatus {
   OK = 200,
   Created = 201,
   NoContent = 204,
+  Found = 302,
   BadRequest = 400,
   Unauthorized = 401,
   Forbidden = 403,
@@ -9,5 +10,6 @@ export enum HttpStatus {
   Conflict = 409,
   UnprocessableEntity = 422,
   InternalServerError = 500,
+  BadGateway = 502,
   ServiceUnavailable = 503,
 }
