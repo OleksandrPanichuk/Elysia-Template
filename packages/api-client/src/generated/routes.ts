@@ -3,6 +3,18 @@
 export interface Routes {
   api: {
     auth: {
+      accounts: {
+        /** List connected accounts */
+        get: {
+          response: Array<{
+            type: "CREDENTIALS" | "GITHUB" | "GOOGLE";
+            email: string | null;
+            connectedAt: string;
+            canDisconnect: boolean;
+          }>;
+          auth: true;
+        };
+      };
       oauth: {
         (provider: "google" | "github"): {
           /** Start OAuth sign-in */
@@ -151,6 +163,7 @@ export interface Routes {
 }
 
 export const routePaths = {
+  "api.auth.accounts.get": "/api/auth/accounts",
   "api.auth.oauth.:param.callback.get": "/api/auth/oauth/{provider}/callback",
   "api.auth.oauth.:param.get": "/api/auth/oauth/{provider}",
   "api.auth.oauth.:param.link.post": "/api/auth/oauth/{provider}/link",

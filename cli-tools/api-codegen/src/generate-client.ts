@@ -6,7 +6,7 @@ import { createOpenApiApp } from "@repo/api";
 const REPO_ROOT = resolve(import.meta.dir, "../../..");
 
 interface OpenApiSchema {
-  type?: string;
+  type?: string | string[];
   format?: string;
   const?: unknown;
   enum?: unknown[];
@@ -78,6 +78,17 @@ const renderSchema = (schema: OpenApiSchema | undefined, depth = 1): string => {
 
   if (schema.enum?.length) {
     return schema.enum.map((value) => JSON.stringify(value)).join(" | ");
+  }
+
+  if (Array.isArray(schema.type)) {
+    const members = schema.type.map((type) =>
+      renderSchema({ ...schema, type }, depth),
+    );
+    const nullish = members.filter((member) => member === "null");
+
+    return [...members.filter((member) => member !== "null"), ...nullish].join(
+      " | ",
+    );
   }
 
   switch (schema.type) {

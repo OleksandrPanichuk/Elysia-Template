@@ -1,4 +1,8 @@
 export {
+  ListConnectedAccountsUseCase,
+  type ListConnectedAccountsUseCaseOptions,
+} from "./list-connected-accounts";
+export {
   ResetPasswordUseCase,
   type ResetPasswordUseCaseOptions,
 } from "./reset-password";

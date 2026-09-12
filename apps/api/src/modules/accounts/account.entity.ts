@@ -1,4 +1,5 @@
 import type { AccountRow } from "@/db";
+import type { ConnectedAccountModel } from "@/modules/auth/auth.model";
 
 import { PASSWORD_HASH_OPTIONS } from "./accounts.constants";
 
@@ -14,5 +15,23 @@ export class AccountEntity {
     hash: string,
   ): Promise<boolean> {
     return Bun.password.verify(password, hash);
+  }
+
+  public static isCredentials(account: AccountEntity): boolean {
+    return account.type === "CREDENTIALS";
+  }
+
+  public static normalize(
+    account: AccountEntity,
+    canDisconnect: boolean,
+  ): ConnectedAccountModel {
+    return {
+      type: account.type,
+      email: AccountEntity.isCredentials(account)
+        ? account.providerAccountId
+        : account.providerEmail,
+      connectedAt: (account.linkedAt ?? account.createdAt).toISOString(),
+      canDisconnect,
+    };
   }
 }
