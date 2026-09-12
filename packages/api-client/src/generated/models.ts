@@ -44,6 +44,33 @@ export interface VerifyEmailInput {
   token: string;
 }
 
+// modules/oauth/dto/oauth-authorize.dto.ts
+export interface OAuthProviderParams {
+  provider: "google" | "github";
+}
+
+export interface OAuthAuthorizeQuery {
+  redirectTo?: string | undefined;
+}
+
+// modules/oauth/dto/oauth-callback.dto.ts
+export interface OAuthCallbackQuery {
+  code?: string | undefined;
+  state?: string | undefined;
+  error?: string | undefined;
+}
+
+// modules/oauth/oauth.model.ts
+export interface OAuthMessageModel {
+  message: string;
+}
+
+export interface LinkedOAuthProviderModel {
+  email: string | null;
+  provider: "google" | "github";
+  linkedAt: string | null;
+}
+
 // modules/users/user.model.ts
 export interface UserModel {
   email: string;

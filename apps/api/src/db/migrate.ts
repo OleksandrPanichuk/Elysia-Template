@@ -1,11 +1,13 @@
 import { migrate } from "drizzle-orm/bun-sql/migrator";
-
-import { loadEnv } from "@/configs";
+import z from "zod";
 
 import { createDatabase } from "./client";
 
-const env = loadEnv();
-const db = createDatabase(env.DATABASE_URL);
+const { DATABASE_URL } = z
+  .object({ DATABASE_URL: z.url({ protocol: /^postgres(ql)?$/ }) })
+  .parse(Bun.env);
+
+const db = createDatabase(DATABASE_URL);
 
 try {
   await migrate(db, {

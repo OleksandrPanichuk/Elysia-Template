@@ -33,9 +33,13 @@ type OperationFn<Node extends Operation> = Node extends { body: infer Body }
     ) => Promise<ApiResult<Node["response"]>>
   : (options?: RequestOptions) => Promise<ApiResult<Node["response"]>>;
 
+type ApiBranch<Node> = { [Key in keyof Node]: ApiProxy<Node[Key]> };
+
 type ApiProxy<Node> = Node extends Operation
   ? OperationFn<Node>
-  : { [Key in keyof Node]: ApiProxy<Node[Key]> };
+  : Node extends (param: infer Param) => infer Next
+    ? ((param: Param) => ApiProxy<Next>) & ApiBranch<Node>
+    : ApiBranch<Node>;
 
 export type ApiClient = ApiProxy<Routes>;
 

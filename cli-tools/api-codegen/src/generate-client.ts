@@ -19,8 +19,15 @@ interface OpenApiSchema {
   additionalProperties?: OpenApiSchema | boolean;
 }
 
+interface OpenApiParameter {
+  name: string;
+  in: string;
+  schema?: OpenApiSchema;
+}
+
 interface Operation {
   summary?: string;
+  parameters?: OpenApiParameter[];
   requestBody?: {
     content?: Record<string, { schema?: OpenApiSchema }>;
   };
@@ -161,6 +168,7 @@ interface RouteNode {
   children: Map<string, RouteNode>;
   operations: Map<string, RouteOperation>;
   param?: string;
+  paramType?: string;
 }
 
 const createNode = (): RouteNode => ({
@@ -180,6 +188,7 @@ const insert = (
   path: string,
   method: string,
   operation: RouteOperation,
+  parameters: OpenApiParameter[] = [],
 ): void => {
   const segments = path.split("/").filter((segment) => segment.length > 0);
 
@@ -195,6 +204,14 @@ const insert = (
       child = createNode();
       if (param) child.param = param;
       node.children.set(key, child);
+    }
+
+    if (param && child.paramType === undefined) {
+      const schema = parameters.find(
+        (candidate) => candidate.in === "path" && candidate.name === param,
+      )?.schema;
+
+      if (schema?.enum?.length) child.paramType = renderSchema(schema);
     }
 
     node = child;
@@ -230,7 +247,7 @@ const renderNode = (node: RouteNode, depth: number): string => {
   for (const [key, child] of [...node.children].sort()) {
     if (child.param) {
       lines.push(
-        `${inner}(${child.param}: string | number): ${renderNode(child, depth + 1)};`,
+        `${inner}(${child.param}: ${child.paramType ?? "string | number"}): ${renderNode(child, depth + 1)};`,
       );
       continue;
     }
@@ -275,13 +292,19 @@ export const renderRoutes = (paths: Record<string, PathItem>): string => {
       const body = bodySchema(operation);
       const response = successSchema(operation);
 
-      insert(root, path, method, {
+      insert(
+        root,
         path,
-        summary: operation.summary,
-        body,
-        response,
-        auth: Boolean(operation.security?.length),
-      });
+        method,
+        {
+          path,
+          summary: operation.summary,
+          body,
+          response,
+          auth: Boolean(operation.security?.length),
+        },
+        operation.parameters,
+      );
     }
   }
 

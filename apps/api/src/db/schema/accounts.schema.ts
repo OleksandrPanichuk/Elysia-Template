@@ -11,7 +11,11 @@ import {
 
 import { usersSchema } from "./users.schema";
 
-export const accountTypeEnum = pgEnum("account_type", ["CREDENTIALS"]);
+export const accountTypeEnum = pgEnum("account_type", [
+  "CREDENTIALS",
+  "GITHUB",
+  "GOOGLE",
+]);
 
 export const accountsSchema = pgTable(
   "accounts",
@@ -22,7 +26,9 @@ export const accountsSchema = pgTable(
       .references(() => usersSchema.id, { onDelete: "cascade" }),
     type: accountTypeEnum("type").notNull(),
     providerAccountId: text("provider_account_id").notNull(),
+    providerEmail: text("provider_email"),
     passwordHash: text("password_hash"),
+    linkedAt: timestamp("linked_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
