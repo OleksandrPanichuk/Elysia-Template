@@ -1,0 +1,10 @@
+{
+  "extends": "@repo/typescript-config/bun.json",
+  "compilerOptions": {
+    "paths": {
+      "@/*": ["../../apps/api/src/*"]
+    }
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["node_modules"]
+}
