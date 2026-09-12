@@ -4,7 +4,7 @@ export interface Routes {
   api: {
     auth: {
       oauth: {
-        (provider: string | number): {
+        (provider: "google" | "github"): {
           /** Start OAuth sign-in */
           get: {
             response: unknown;
