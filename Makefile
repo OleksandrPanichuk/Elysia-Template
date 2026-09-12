@@ -1,6 +1,8 @@
 
 .PHONY: build logs migrate sh up down reset check generate db-generate db-migrate db-studio db-development db-shell
 
+DB_URL ?= postgres://postgres:postgres@localhost:5432/postgres
+
 build:
 	docker compose build
 
@@ -15,6 +17,9 @@ sh:
 
 up:
 	docker compose up
+
+up-db:
+	docker compose up -d --wait db
 
 down:
 	docker compose down
@@ -36,12 +41,10 @@ db-generate:
 	bun run --cwd apps/api db:generate
 
 db-migrate:
-	bun run --cwd apps/api db:migrate
+	DATABASE_URL="${DB_URL}" bun run --cwd apps/api db:migrate
 
 db-studio:
 	bun run --cwd apps/api db:studio
-
-DB_URL ?= postgres://postgres:postgres@localhost:5432/postgres
 
 db-development:
 	@docker compose up -d --wait db
