@@ -3,6 +3,8 @@ export {
   EmailNotVerifiedError,
   InvalidCredentialsError,
   InvalidTokenError,
+  PasswordAlreadySetError,
+  PasswordNotSetError,
   TokenExpiredError,
 } from "./auth.errors";
 export {

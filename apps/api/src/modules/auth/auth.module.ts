@@ -3,10 +3,12 @@ import { makeUseCase } from "@/core/registry";
 
 import { authRoutes } from "./auth.routes";
 import {
+  ChangePasswordUseCase,
   ListConnectedAccountsUseCase,
   ResetPasswordUseCase,
   SendEmailVerificationTokenUseCase,
   SendResetPasswordTokenUseCase,
+  SetPasswordUseCase,
   SignInUseCase,
   SignOutUseCase,
   SignUpUseCase,
@@ -28,5 +30,7 @@ export const authModule = defineModule({
       ),
       resetPassword: makeUseCase(ResetPasswordUseCase),
       sendResetPasswordToken: makeUseCase(SendResetPasswordTokenUseCase),
+      setPassword: makeUseCase(SetPasswordUseCase),
+      changePassword: makeUseCase(ChangePasswordUseCase),
     }),
 });

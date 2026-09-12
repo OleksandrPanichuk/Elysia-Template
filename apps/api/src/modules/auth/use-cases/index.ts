@@ -1,4 +1,8 @@
 export {
+  ChangePasswordUseCase,
+  type ChangePasswordUseCaseOptions,
+} from "./change-password";
+export {
   ListConnectedAccountsUseCase,
   type ListConnectedAccountsUseCaseOptions,
 } from "./list-connected-accounts";
@@ -14,6 +18,10 @@ export {
   SendResetPasswordTokenUseCase,
   type SendResetPasswordTokenUseCaseOptions,
 } from "./send-reset-password-token";
+export {
+  SetPasswordUseCase,
+  type SetPasswordUseCaseOptions,
+} from "./set-password";
 export { SignInUseCase, type SignInUseCaseOptions } from "./sign-in";
 export { SignOutUseCase, type SignOutUseCaseOptions } from "./sign-out";
 export { SignUpUseCase, type SignUpUseCaseOptions } from "./sign-up";
