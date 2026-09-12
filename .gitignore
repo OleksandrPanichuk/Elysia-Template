@@ -36,3 +36,6 @@ yarn-error.log*
 # Misc
 .DS_Store
 *.pem
+
+# Generated API client (produced by `bun run generate`)
+packages/api-client/src/generated

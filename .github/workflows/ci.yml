@@ -25,14 +25,14 @@ jobs:
       - name: Install
         run: bun install --frozen-lockfile
 
+      - name: Generate API client
+        run: bun run generate
+
       - name: Lint
         run: bun run lint
 
       - name: Check types
         run: bun run check-types
-
-      - name: Check generated client is up to date
-        run: bun run check-generated
 
       - name: Test
         run: bun run test
