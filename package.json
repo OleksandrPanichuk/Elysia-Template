@@ -3,11 +3,13 @@
   "private": true,
   "scripts": {
     "build": "turbo run build",
+    "check-generated": "turbo run check-generated",
+    "check-types": "turbo run check-types",
     "dev": "turbo run dev",
-    "lint": "turbo run lint",
-    "test": "turbo run test",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
-    "check-types": "turbo run check-types"
+    "generate": "turbo run generate",
+    "lint": "turbo run lint",
+    "test": "turbo run test"
   },
   "devDependencies": {
     "prettier": "3.9.6",
