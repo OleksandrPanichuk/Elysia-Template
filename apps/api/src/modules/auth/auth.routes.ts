@@ -4,20 +4,24 @@ import type { Executable } from "@/core/use-case";
 
 import { InvalidCredentialsError } from "./auth.errors";
 import {
+  changePasswordRoute,
   listConnectedAccountsRoute,
   resetPasswordRoute,
   sendEmailVerificationTokenRoute,
   sendResetPasswordTokenRoute,
+  setPasswordRoute,
   signInRoute,
   signOutRoute,
   signUpRoute,
   verifyEmailRoute,
 } from "./routes";
 import type {
+  ChangePasswordUseCase,
   ListConnectedAccountsUseCase,
   ResetPasswordUseCase,
   SendEmailVerificationTokenUseCase,
   SendResetPasswordTokenUseCase,
+  SetPasswordUseCase,
   SignInUseCase,
   SignOutUseCase,
   SignUpUseCase,
@@ -33,6 +37,8 @@ export interface AuthActions {
   sendEmailVerificationToken: Executable<SendEmailVerificationTokenUseCase>;
   resetPassword: Executable<ResetPasswordUseCase>;
   sendResetPasswordToken: Executable<SendResetPasswordTokenUseCase>;
+  setPassword: Executable<SetPasswordUseCase>;
+  changePassword: Executable<ChangePasswordUseCase>;
 }
 
 export const authRoutes = (actions: AuthActions) =>
@@ -53,6 +59,8 @@ export const authRoutes = (actions: AuthActions) =>
       ...sendEmailVerificationTokenRoute(actions),
     )
     .post("/reset-password", ...resetPasswordRoute(actions))
+    .post("/set-password", ...setPasswordRoute(actions))
+    .post("/change-password", ...changePasswordRoute(actions))
     .post(
       "/send-reset-password-token",
       ...sendResetPasswordTokenRoute(actions),
