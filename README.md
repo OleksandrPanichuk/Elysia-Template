@@ -2,7 +2,8 @@
 
 A [Turborepo](https://turborepo.dev/) monorepo containing an
 [Elysia](https://elysiajs.com/) API running on [Bun](https://bun.sh/), backed by
-PostgreSQL via [Drizzle ORM](https://orm.drizzle.team/).
+PostgreSQL via [Drizzle ORM](https://orm.drizzle.team/), with a typed client
+generated from the API's own routes.
 
 ## What's inside
 
@@ -12,8 +13,14 @@ PostgreSQL via [Drizzle ORM](https://orm.drizzle.team/).
 
 ### Packages
 
++ `@repo/api-client` — typed HTTP client, generated from the API
 + `@repo/eslint-config` — shared ESLint config (type-aware, Prettier-integrated)
 + `@repo/typescript-config` — shared `tsconfig.json` bases
+
+### CLI tools
+
++ `@repo/api-codegen` — generates `@repo/api-client` from the API's routes and
+  its `.model.ts` / `.dto.ts` exports
 
 Everything is written in [TypeScript](https://www.typescriptlang.org/).
 
@@ -25,36 +32,78 @@ Install dependencies:
 bun install
 ```
 
-Start PostgreSQL and the API in Docker, with hot reload:
+Start the whole stack in Docker, with hot reload:
 
 ```sh
 make up
 ```
 
-The API listens on <http://localhost:8080> and Postgres on port 5432.
+| Service | URL | Notes |
+| --- | --- | --- |
+| API | <http://localhost:8080> | routes are served under `/api` |
+| OpenAPI | <http://localhost:8080/api/openapi> | generated from the route definitions |
+| Mailpit | <http://localhost:8025> | catches every outbound email in development |
+| Bull Board | <http://localhost:3001> | background job queues |
+| Postgres | `localhost:5432` | `postgres` / `postgres` |
+
+Redis runs three times, one instance per concern: sessions (6380), jobs (6379)
+and cache (6381). They are separate so a flushed cache cannot sign everyone out.
 
 ## Running locally without Docker
 
-Start only the database, then run the API on the host:
+The API needs Postgres, Redis and SMTP. Start the backing services in Docker and
+run the API itself on the host:
 
 ```sh
-docker compose up -d db
+docker compose up -d --wait db sessions queue_redis cache mailpit
 bun run dev
 ```
+
+## The generated API client
+
+`packages/api-client/src/generated` is **not committed**. It is produced by
+`bun run generate` from the API's route definitions and its `.model.ts` /
+`.dto.ts` exports, takes about a second, and needs no database — the codegen
+boots the app under `NODE_ENV=test`, where every port resolves to an in-memory
+adapter.
+
+You should never need to run it by hand. `generate` is a `dependsOn` of `build`,
+`check-types`, `dev`, `lint` and `test` in `turbo.json`, so the client is always
+regenerated before anything reads it. A stale client cannot exist, and no pull
+request carries a generated diff.
+
+Consume it from another workspace package:
+
+```ts
+import { createApiClient } from "@repo/api-client";
+
+const api = createApiClient({ url: "http://localhost:8080" });
+
+const { data, error } = await api.api.auth.signIn.post({
+  email: "user@example.com",
+  password: "hunter2",
+});
+
+if (error) throw new Error(error.message);
+
+console.log(data.userId, data.expiresAt);
+```
+
+Route segments are camelCased from the URL (`/api/auth/sign-in` becomes
+`api.auth.signIn`), so `url` is the server's origin without the `/api` prefix.
+Path parameters are call arguments: `api.api.auth.oauth("google").get()`.
+
+`@repo/api-client/server` exposes `createServerApiClient`, which forwards a
+cookie header instead of relying on the browser's cookie jar.
 
 ## Database
 
 Migrations live in `apps/api/drizzle` and are managed by Drizzle Kit.
 
 ```sh
-# generate a migration after changing src/db/schema
-bun run --cwd apps/api db:generate
-
-# apply pending migrations
-bun run --cwd apps/api db:migrate
-
-# browse the data
-bun run --cwd apps/api db:studio
+make db-generate   # generate a migration after changing src/db/schema
+make db-migrate    # apply pending migrations
+make db-studio     # browse the data
 ```
 
 Open a psql shell against the running container:
@@ -71,8 +120,28 @@ bun run build         # build all packages
 bun run lint          # eslint, zero warnings allowed
 bun run check-types   # tsc --noEmit
 bun run test          # bun test
+bun run generate      # regenerate the API client
 bun run format        # prettier --write
 ```
+
+`make check` runs lint, types and tests the way CI does.
+
+## Configuration
+
+Environment variables are validated by a zod schema at startup
+(`apps/api/src/configs/env.config.ts`); the process exits with a readable report
+if any are missing or malformed. `docker compose` already sets everything needed
+for local development.
+
+`DATABASE_URL` is always required. `SESSIONS_REDIS_URL`, `JOBS_REDIS_URL`,
+`CACHE_REDIS_URL` and `SMTP_URL` are required unless `NODE_ENV=test`, where
+each port falls back to an in-memory adapter so the whole app boots in-process
+with no external services.
+
+OAuth is optional: set `OAUTH_STATE_SECRET` (32+ characters),
+`OAUTH_REDIRECT_BASE`, and the client ID and secret for each provider you want
+(`GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`, `GITHUB_CLIENT_ID` /
+`GITHUB_CLIENT_SECRET`).
 
 ## Code style
 
@@ -83,6 +152,9 @@ The shared config enables type-aware linting and requires explicit
 `public` / `private` / `protected` modifiers on all class members. VS Code
 settings in `.vscode/` wire format-on-save to the ESLint extension.
 
-> Note: `@repo/eslint-config` pins TypeScript 6 locally because
-> `typescript-eslint` does not yet support the TypeScript 7 API. The workspace
-> compiler stays on TypeScript 7.
+## Architecture
+
+`CLAUDE.md` documents the conventions this codebase is built on: the use case
+contract, the `modules` / `adapters` / `infrastructure` layering rule, the module
+lifecycle hooks, background jobs, and the two caching layers. Read it before
+adding a module.
