@@ -7,6 +7,7 @@ services:
     environment:
       - NODE_ENV=development
       - SESSIONS_REDIS_URL=redis://sessions:6379
+      - JOBS_REDIS_URL=redis://queue_redis:6379
       - SMTP_URL=smtp://mailpit:1025
     ports:
       - "8080:8080"
@@ -14,6 +15,8 @@ services:
       db:
         condition: service_healthy
       sessions:
+        condition: service_healthy
+      queue_redis:
         condition: service_healthy
       mailpit:
         condition: service_started

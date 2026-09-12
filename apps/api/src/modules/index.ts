@@ -3,6 +3,7 @@ import type { AppModule } from "@/core/module";
 import { accountsModule } from "./accounts";
 import { authModule } from "./auth";
 import { healthModule } from "./health";
+import { jobsModule } from "./jobs";
 import { notificationsModule } from "./notifications";
 import { sessionsModule } from "./sessions";
 import { usersModule } from "./users";
@@ -16,4 +17,5 @@ export const modules: readonly AppModule[] = [
   accountsModule,
   authModule,
   verificationTokensModule,
+  jobsModule,
 ];

@@ -66,32 +66,41 @@ export const EnvSchema = z.object({
   MAIL_FROM_NAME: z.string().trim().min(1).default("Unknown Sender"),
   MAIL_FROM_ADDRESS: z.email().default("no-reply@example.com"),
   SMTP_URL: z.url({ protocol: /^smtp$/ }).optional(),
+
+  JOBS_REDIS_URL: z.url({ protocol: /^rediss?$/ }).optional(),
 });
 
 export type Env = z.infer<typeof EnvSchema>;
 
-const requireSessionStore = (env: Env, ctx: z.RefinementCtx): void => {
-  if (env.NODE_ENV === NodeEnv.Test || env.SESSIONS_REDIS_URL) return;
+type RequiredOutsideTestKey = NonNullable<
+  {
+    [K in keyof Env]: undefined extends Env[K] ? K : never;
+  }[keyof Env]
+>;
 
-  ctx.addIssue({
-    code: "custom",
-    path: ["SESSIONS_REDIS_URL"],
-    message: 'Required unless NODE_ENV is "test"',
-  });
-};
+const requireOutsideTest =
+  (...keys: RequiredOutsideTestKey[]) =>
+  (env: Env, ctx: z.RefinementCtx): void => {
+    if (env.NODE_ENV === NodeEnv.Test) return;
 
-const requireMailTransport = (env: Env, ctx: z.RefinementCtx): void => {
-  if (env.NODE_ENV === NodeEnv.Test || env.SMTP_URL) return;
+    for (const key of keys) {
+      if (env[key] !== undefined) continue;
 
-  ctx.addIssue({
-    code: "custom",
-    path: ["SMTP_URL"],
-    message: 'Required unless NODE_ENV is "test"',
-  });
-};
+      ctx.addIssue({
+        code: "custom",
+        path: [key],
+        message: 'Required unless NODE_ENV is "test"',
+      });
+    }
+  };
 
-const CheckedEnvSchema =
-  EnvSchema.superRefine(requireSessionStore).superRefine(requireMailTransport);
+const CheckedEnvSchema = EnvSchema.superRefine(
+  requireOutsideTest(
+    "SESSIONS_REDIS_URL",
+    "SMTP_URL",
+    "JOBS_REDIS_URL",
+  ),
+);
 
 export const loadEnv = (source: unknown = Bun.env): Env => {
   const result = CheckedEnvSchema.safeParse(source);
