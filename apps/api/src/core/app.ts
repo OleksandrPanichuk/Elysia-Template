@@ -9,7 +9,7 @@ import { getSessionCookieName, sessionsPlugin } from "@/modules/sessions";
 import { csrfPlugin, envPlugin, errorPlugin, loggerPlugin } from "@/plugins";
 
 export const createApp = (modules: readonly AppModule[] = defaultModules) => {
-  modules.forEach((module) => module.register?.());
+  modules.forEach((module) => module.register());
 
   const base = new Elysia({ name: "api", prefix: "/api" })
     .use(loggerPlugin)
@@ -47,14 +47,24 @@ export const startModules = async (
   modules: readonly AppModule[] = defaultModules,
 ): Promise<void> => {
   for (const module of modules) {
-    await module.start?.();
+    await module.start();
   }
 };
 
 export const closeModules = async (
   modules: readonly AppModule[] = defaultModules,
 ): Promise<void> => {
+  const errors: unknown[] = [];
+
   for (const module of [...modules].reverse()) {
-    await module.shutdown?.();
+    try {
+      await module.shutdown();
+    } catch (error) {
+      errors.push(error);
+    }
+  }
+
+  if (errors.length > 0) {
+    throw new AggregateError(errors, "one or more modules failed to shut down");
   }
 };
