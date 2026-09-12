@@ -1,4 +1,6 @@
 
+.PHONY: build logs migrate sh up down reset check generate db-generate db-migrate db-studio db-development db-shell
+
 build:
 	docker compose build
 
@@ -16,6 +18,28 @@ up:
 
 down:
 	docker compose down
+
+reset:
+	docker compose down -v
+	docker compose up -d --wait
+
+check:
+	bun run lint
+	bun run check-types
+	bun run check-generated
+	bun run test
+
+generate:
+	bun run generate
+
+db-generate:
+	bun run --cwd apps/api db:generate
+
+db-migrate:
+	bun run --cwd apps/api db:migrate
+
+db-studio:
+	bun run --cwd apps/api db:studio
 
 DB_URL ?= postgres://postgres:postgres@localhost:5432/postgres
 
