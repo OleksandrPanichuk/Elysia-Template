@@ -202,3 +202,16 @@ A cache is an optimization, never a dependency: `RedisCache` treats an
 unavailable connection and a malformed entry as a miss and never throws.
 Cached values are validated by a schema on read, because JSON round-trips turn
 `Date` into `string`.
+
+## Generated API client
+
+`packages/api-client/src/generated` is not committed. It is produced by
+`bun run generate` from the API's route definitions and its `.model.ts` /
+`.dto.ts` exports, takes about a second, and needs no database — the codegen
+boots the app under `NODE_ENV=test`, where every port resolves to a memory
+adapter.
+
+`generate` is a `dependsOn` of `build`, `check-types`, `dev`, `lint` and `test`
+in `turbo.json`, so the files are always regenerated before anything reads
+them. There is nothing to forget and nothing to check: a stale client cannot
+exist, and no pull request carries a generated diff.
