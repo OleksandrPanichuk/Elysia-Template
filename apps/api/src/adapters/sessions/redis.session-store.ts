@@ -5,7 +5,11 @@ import { getEnv } from "@/configs";
 import { getLogger } from "@/infrastructure";
 import type { RedisConnection } from "@/infrastructure/redis";
 import type { SessionEntity } from "@/modules/sessions/session.entity";
-import { SessionStore } from "@/modules/sessions/session.store";
+import {
+  byNewestFirst,
+  SessionStore,
+  type StoredSession,
+} from "@/modules/sessions/session.store";
 import { SessionStoreUnavailableError } from "@/modules/sessions/sessions.errors";
 
 const OPERATION_TIMEOUT_MS = 3_000;
@@ -16,6 +20,8 @@ const StoredSessionSchema = z
     userId: z.uuid(),
     createdAt: z.number().int().nonnegative(),
     expiresAt: z.number().int().positive(),
+    userAgent: z.string().nullable().default(null),
+    ip: z.string().nullable().default(null),
   })
   .refine((session) => session.expiresAt > session.createdAt);
 
@@ -64,6 +70,45 @@ export class RedisSessionStore extends SessionStore {
     });
   }
 
+  public listByUserId(userId: string): Promise<StoredSession[]> {
+    return this.execute(async (client) => {
+      const indexKey = this.userKey(userId);
+      const members = await client.smembers(indexKey);
+
+      if (members.length === 0) return [];
+
+      const values = await client.mget(
+        ...members.map((member) => this.key(member)),
+      );
+
+      const sessions: StoredSession[] = [];
+      const stale: string[] = [];
+
+      members.forEach((tokenHash, index) => {
+        const value = values[index];
+
+        if (value === null || value === undefined) {
+          stale.push(tokenHash);
+          return;
+        }
+
+        const session = this.tryDecode(value, tokenHash);
+
+        if (!session) {
+          stale.push(tokenHash);
+          return;
+        }
+
+        sessions.push({ ...session, tokenHash });
+      });
+
+      if (stale.length > 0) {
+        await client.srem(indexKey, ...stale);
+      }
+      return sessions.sort(byNewestFirst);
+    });
+  }
+
   public deleteByTokenHash(tokenHash: string): Promise<void> {
     return this.execute(async (client) => {
       const value = await client.get(this.key(tokenHash));
@@ -90,6 +135,23 @@ export class RedisSessionStore extends SessionStore {
       }
 
       await client.del(indexKey);
+    });
+  }
+
+  public deleteByUserIdExcept(
+    userId: string,
+    tokenHash: string,
+  ): Promise<void> {
+    return this.execute(async (client) => {
+      const indexKey = this.userKey(userId);
+      const members = await client.smembers(indexKey);
+
+      const doomed = members.filter((member) => member !== tokenHash);
+
+      if (doomed.length === 0) return;
+
+      await client.del(...doomed.map((member) => this.key(member)));
+      await client.srem(indexKey, ...doomed);
     });
   }
 

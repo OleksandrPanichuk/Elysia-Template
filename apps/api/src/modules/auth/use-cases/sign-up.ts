@@ -16,6 +16,8 @@ export interface SignUpUseCaseOptions {
   email: string;
   password: string;
   name: string;
+  userAgent?: string | null;
+  ip?: string | null;
 }
 
 type Options = SignUpUseCaseOptions;
@@ -36,7 +38,13 @@ export class SignUpUseCase extends UseCase<Options, Result> {
 
   private readonly runInTransaction = transaction;
 
-  public async execute({ name, email, password }: Options): Promise<Result> {
+  public async execute({
+    name,
+    email,
+    password,
+    userAgent,
+    ip,
+  }: Options): Promise<Result> {
     const normalizedEmail = UserEntity.normalizeEmail(email);
 
     const existingUser =
@@ -64,7 +72,10 @@ export class SignUpUseCase extends UseCase<Options, Result> {
 
     await this.authService.sendEmailVerification(user);
 
-    return this.sessionsService.create(user.id);
+    return this.sessionsService.create(user.id, {
+      userAgent,
+      ip,
+    });
   }
 
   private async sleep(ms: number): Promise<void> {

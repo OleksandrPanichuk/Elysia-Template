@@ -1,5 +1,9 @@
 import type { SessionEntity } from "@/modules/sessions/session.entity";
-import { SessionStore } from "@/modules/sessions/session.store";
+import {
+  byNewestFirst,
+  SessionStore,
+  type StoredSession,
+} from "@/modules/sessions/session.store";
 
 export class MemorySessionStore extends SessionStore {
   private readonly sessions = new Map<string, SessionEntity>();
@@ -26,6 +30,24 @@ export class MemorySessionStore extends SessionStore {
     return Promise.resolve(session);
   }
 
+  public listByUserId(userId: string): Promise<StoredSession[]> {
+    const now = Date.now();
+    const sessions: StoredSession[] = [];
+
+    for (const [tokenHash, session] of this.sessions) {
+      if (session.userId !== userId) continue;
+
+      if (session.expiresAt <= now) {
+        this.sessions.delete(tokenHash);
+        continue;
+      }
+
+      sessions.push({ ...session, tokenHash });
+    }
+
+    return Promise.resolve(sessions.sort(byNewestFirst));
+  }
+
   public deleteByTokenHash(tokenHash: string): Promise<void> {
     this.sessions.delete(tokenHash);
 
@@ -35,6 +57,19 @@ export class MemorySessionStore extends SessionStore {
   public deleteByUserId(userId: string): Promise<void> {
     for (const [tokenHash, session] of this.sessions) {
       if (session.userId === userId) this.sessions.delete(tokenHash);
+    }
+
+    return Promise.resolve();
+  }
+
+  public deleteByUserIdExcept(
+    userId: string,
+    tokenHash: string,
+  ): Promise<void> {
+    for (const [hash, session] of this.sessions) {
+      if (session.userId === userId && hash !== tokenHash) {
+        this.sessions.delete(hash);
+      }
     }
 
     return Promise.resolve();

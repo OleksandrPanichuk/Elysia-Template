@@ -1,5 +1,12 @@
 import type { SessionEntity } from "./session.entity";
 
+export interface StoredSession extends SessionEntity {
+  tokenHash: string;
+}
+
+export const byNewestFirst = (a: StoredSession, b: StoredSession): number =>
+  b.createdAt - a.createdAt || a.id.localeCompare(b.id);
+
 export abstract class SessionStore {
   public abstract create(
     tokenHash: string,
@@ -10,7 +17,14 @@ export abstract class SessionStore {
     tokenHash: string,
   ): Promise<SessionEntity | null>;
 
+  public abstract listByUserId(userId: string): Promise<StoredSession[]>;
+
   public abstract deleteByTokenHash(tokenHash: string): Promise<void>;
 
   public abstract deleteByUserId(userId: string): Promise<void>;
+
+  public abstract deleteByUserIdExcept(
+    userId: string,
+    tokenHash: string,
+  ): Promise<void>;
 }

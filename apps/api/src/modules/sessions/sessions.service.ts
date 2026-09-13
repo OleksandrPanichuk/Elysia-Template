@@ -1,25 +1,29 @@
-import { createHash, randomBytes, randomUUID } from "node:crypto";
+import { randomUUID } from "node:crypto";
 
 import { getEnv } from "@/configs";
 import { SECOND } from "@/constants";
 import { makeRepository } from "@/core/registry";
 import { Service } from "@/core/service";
 
-import type { CreatedSession, SessionEntity } from "./session.entity";
-import { SessionStore } from "./session.store";
-import { SESSION_TOKEN_PATTERN } from "./sessions.constants";
+import { type CreatedSession, SessionEntity } from "./session.entity";
+import { SessionStore, type StoredSession } from "./session.store";
+import { MAX_SESSIONS_PER_USER } from "./sessions.constants";
+
+export interface CreateSessionOptions {
+  userAgent?: string | null;
+  ip?: string | null;
+}
 
 export class SessionsService extends Service {
-  constructor(
-    private readonly store: SessionStore = makeRepository(SessionStore),
-    private readonly ttlSeconds = getEnv().SESSIONS_TTL_SECONDS,
-    private readonly now = () => Date.now(),
-  ) {
-    super();
-  }
+  private readonly store: SessionStore = makeRepository(SessionStore);
+  private readonly ttlSeconds = getEnv().SESSIONS_TTL_SECONDS;
+  private readonly now = () => Date.now();
 
-  public async create(userId: string): Promise<CreatedSession> {
-    const token = randomBytes(32).toString("hex");
+  public async create(
+    userId: string,
+    options: CreateSessionOptions,
+  ): Promise<CreatedSession> {
+    const token = SessionEntity.generateToken();
     const createdAt = this.now();
 
     const session: SessionEntity = {
@@ -27,13 +31,17 @@ export class SessionsService extends Service {
       userId,
       createdAt,
       expiresAt: createdAt + this.ttlSeconds * SECOND,
+      userAgent: SessionEntity.normalizeUserAgent(options.userAgent),
+      ip: options?.ip ?? null,
     };
 
-    const created = await this.store.create(this.hash(token), session);
+    const created = await this.store.create(SessionEntity.hash(token), session);
 
     if (!created) {
       throw new Error("Failed to create session");
     }
+
+    await this.evictOldest(userId);
 
     return {
       token,
@@ -41,21 +49,25 @@ export class SessionsService extends Service {
     };
   }
 
+  public list(userId: string): Promise<StoredSession[]> {
+    return this.store.listByUserId(userId);
+  }
+
   public async validate(
     token: string | undefined,
   ): Promise<SessionEntity | null> {
-    if (!this.isWellFormed(token)) {
+    if (!SessionEntity.isWellFormed(token)) {
       return null;
     }
 
-    const tokenHash = this.hash(token);
+    const tokenHash = SessionEntity.hash(token);
     const session = await this.store.findByTokenHash(tokenHash);
 
     if (!session) {
       return null;
     }
 
-    if (session.expiresAt <= this.now()) {
+    if (SessionEntity.isExpired(session, this.now())) {
       await this.store.deleteByTokenHash(tokenHash);
       return null;
     }
@@ -64,22 +76,52 @@ export class SessionsService extends Service {
   }
 
   public async revoke(token: string | undefined): Promise<void> {
-    if (!this.isWellFormed(token)) {
+    if (!SessionEntity.isWellFormed(token)) {
       return;
     }
 
-    await this.store.deleteByTokenHash(this.hash(token));
+    await this.store.deleteByTokenHash(SessionEntity.hash(token));
+  }
+
+  public async revokeById(userId: string, sessionId: string): Promise<boolean> {
+    const sessions = await this.store.listByUserId(userId);
+
+    const target = sessions.find((s) => s.id === sessionId);
+
+    if (!target) return false;
+
+    await this.store.deleteByTokenHash(target.tokenHash);
+
+    return true;
+  }
+
+  public async revokeOthers(
+    userId: string,
+    token: string | undefined,
+  ): Promise<void> {
+    if (!SessionEntity.isWellFormed(token)) {
+      await this.store.deleteByUserId(userId);
+      return;
+    }
+
+    await this.store.deleteByUserIdExcept(userId, SessionEntity.hash(token));
   }
 
   public async revokeAllForUser(userId: string): Promise<void> {
     await this.store.deleteByUserId(userId);
   }
 
-  private isWellFormed(token: string | undefined): token is string {
-    return Boolean(token) && SESSION_TOKEN_PATTERN.test(token!);
-  }
+  private async evictOldest(userId: string): Promise<void> {
+    const sessions = await this.store.listByUserId(userId);
 
-  private hash(token: string): string {
-    return createHash("sha256").update(token).digest("hex");
+    if (sessions.length <= MAX_SESSIONS_PER_USER) {
+      return;
+    }
+
+    const doomed = sessions.slice(MAX_SESSIONS_PER_USER);
+
+    await Promise.all(
+      doomed.map((s) => this.store.deleteByTokenHash(s.tokenHash)),
+    );
   }
 }

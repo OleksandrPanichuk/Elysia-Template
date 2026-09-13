@@ -3,10 +3,16 @@ import { RedisSessionStore } from "@/adapters/sessions/redis.session-store";
 import { NodeEnv } from "@/configs/env.config";
 import { SECOND } from "@/constants";
 import { defineModule } from "@/core/module";
-import { bind } from "@/core/registry";
+import { bind, makeUseCase } from "@/core/registry";
 import { getRedisConnection } from "@/infrastructure/redis";
 
 import { SessionStore } from "./session.store";
+import { sessionsRoutes } from "./sessions.routes";
+import {
+  ListSessionsUseCase,
+  RevokeOtherSessionsUseCase,
+  RevokeSessionUseCase,
+} from "./use-cases";
 
 export const sessionsModule = defineModule({
   name: "sessions",
@@ -35,6 +41,13 @@ export const sessionsModule = defineModule({
 
     return { connection };
   },
+
+  routes: () =>
+    sessionsRoutes({
+      listSessions: makeUseCase(ListSessionsUseCase),
+      revokeSession: makeUseCase(RevokeSessionUseCase),
+      revokeOtherSessions: makeUseCase(RevokeOtherSessionsUseCase),
+    }),
 
   start: async ({ state }) => {
     await state.connection?.connect();

@@ -8,6 +8,8 @@ import { InvalidCredentialsError } from "../auth.errors";
 export interface SignInUseCaseOptions {
   email: string;
   password: string;
+  userAgent?: string | null;
+  ip?: string | null;
 }
 
 type Options = SignInUseCaseOptions;
@@ -20,7 +22,12 @@ export class SignInUseCase extends UseCase<Options, Result> {
 
   private readonly sessionsService = makeService(SessionsService);
 
-  public async execute({ email, password }: Options): Promise<Result> {
+  public async execute({
+    email,
+    password,
+    userAgent,
+    ip,
+  }: Options): Promise<Result> {
     const account = await this.accountsRepository.findCredentialsByEmail(email);
 
     const isPasswordValid = await this.accountsService.verifyPassword(
@@ -32,8 +39,9 @@ export class SignInUseCase extends UseCase<Options, Result> {
       throw new InvalidCredentialsError("Invalid email or password");
     }
 
-    await this.sessionsService.revokeAllForUser(account.userId);
-
-    return this.sessionsService.create(account.userId);
+    return this.sessionsService.create(account.userId, {
+      userAgent,
+      ip,
+    });
   }
 }

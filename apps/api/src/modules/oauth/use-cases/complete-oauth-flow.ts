@@ -17,6 +17,9 @@ export interface CompleteOAuthFlowUseCaseOptions {
   code: string;
   codeVerifier: string;
   nonce: string;
+
+  userAgent?: string | null;
+  ip?: string | null;
 }
 
 type Options = CompleteOAuthFlowUseCaseOptions;
@@ -38,6 +41,8 @@ export class CompleteOAuthFlowUseCase extends UseCase<Options, Result> {
     code,
     codeVerifier,
     nonce,
+    userAgent,
+    ip,
   }: Options): Promise<Result> {
     const oauthProvider = getOAuthProvider(provider);
 
@@ -53,9 +58,10 @@ export class CompleteOAuthFlowUseCase extends UseCase<Options, Result> {
       identity,
     );
 
-    await this.sessionsService.revokeAllForUser(userId);
-
-    return this.sessionsService.create(userId);
+    return this.sessionsService.create(userId, {
+      userAgent,
+      ip,
+    });
   }
 
   private async resolveUserId(
