@@ -3,6 +3,7 @@ import { Elysia } from "elysia";
 import type { AuthUser } from "@/core/auth";
 import { make } from "@/core/registry";
 import type { RouteRateLimitHook } from "@/core/route";
+import { getClientIp } from "@/shared";
 
 import { RateLimitStore } from "./ports";
 import { RateLimitExceededError } from "./rate-limit.errors";
@@ -17,14 +18,10 @@ interface RateLimitContext {
   };
 }
 
-const clientIp = ({ request }: RateLimitContext): string =>
-  request.headers.get("cf-connecting-ip") ??
-  request.headers.get("x-real-ip") ??
-  request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
-  "unknown";
-
 const defaultKey = (context: RateLimitContext): string =>
-  context.user ? `user:${context.user.id}` : `ip:${clientIp(context)}`;
+  context.user
+    ? `user:${context.user.id}`
+    : `ip:${getClientIp(context.request) ?? "unknown"}`;
 
 const rateLimitKey = (
   context: RateLimitContext,
