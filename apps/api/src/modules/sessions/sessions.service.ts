@@ -1,17 +1,13 @@
-import { createHash, randomBytes, randomUUID } from "node:crypto";
+import { randomUUID } from "node:crypto";
 
 import { getEnv } from "@/configs";
 import { SECOND } from "@/constants";
 import { makeRepository } from "@/core/registry";
 import { Service } from "@/core/service";
 
-import type { CreatedSession, SessionEntity } from "./session.entity";
+import { type CreatedSession, SessionEntity } from "./session.entity";
 import { SessionStore, type StoredSession } from "./session.store";
-import {
-  MAX_SESSIONS_PER_USER,
-  MAX_USER_AGENT_LENGTH,
-  SESSION_TOKEN_PATTERN,
-} from "./sessions.constants";
+import { MAX_SESSIONS_PER_USER } from "./sessions.constants";
 
 export interface CreateSessionOptions {
   userAgent?: string | null;
@@ -27,7 +23,7 @@ export class SessionsService extends Service {
     userId: string,
     options: CreateSessionOptions,
   ): Promise<CreatedSession> {
-    const token = randomBytes(32).toString("hex");
+    const token = SessionEntity.generateToken();
     const createdAt = this.now();
 
     const session: SessionEntity = {
@@ -35,11 +31,11 @@ export class SessionsService extends Service {
       userId,
       createdAt,
       expiresAt: createdAt + this.ttlSeconds * SECOND,
-      userAgent: this.truncate(options.userAgent, MAX_USER_AGENT_LENGTH),
+      userAgent: SessionEntity.normalizeUserAgent(options.userAgent),
       ip: options?.ip ?? null,
     };
 
-    const created = await this.store.create(this.hash(token), session);
+    const created = await this.store.create(SessionEntity.hash(token), session);
 
     if (!created) {
       throw new Error("Failed to create session");
@@ -57,25 +53,21 @@ export class SessionsService extends Service {
     return this.store.listByUserId(userId);
   }
 
-  public isCurrent(session: StoredSession, token: string | undefined): boolean {
-    return this.isWellFormed(token) && session.tokenHash === this.hash(token);
-  }
-
   public async validate(
     token: string | undefined,
   ): Promise<SessionEntity | null> {
-    if (!this.isWellFormed(token)) {
+    if (!SessionEntity.isWellFormed(token)) {
       return null;
     }
 
-    const tokenHash = this.hash(token);
+    const tokenHash = SessionEntity.hash(token);
     const session = await this.store.findByTokenHash(tokenHash);
 
     if (!session) {
       return null;
     }
 
-    if (session.expiresAt <= this.now()) {
+    if (SessionEntity.isExpired(session, this.now())) {
       await this.store.deleteByTokenHash(tokenHash);
       return null;
     }
@@ -84,11 +76,11 @@ export class SessionsService extends Service {
   }
 
   public async revoke(token: string | undefined): Promise<void> {
-    if (!this.isWellFormed(token)) {
+    if (!SessionEntity.isWellFormed(token)) {
       return;
     }
 
-    await this.store.deleteByTokenHash(this.hash(token));
+    await this.store.deleteByTokenHash(SessionEntity.hash(token));
   }
 
   public async revokeById(userId: string, sessionId: string): Promise<boolean> {
@@ -107,12 +99,12 @@ export class SessionsService extends Service {
     userId: string,
     token: string | undefined,
   ): Promise<void> {
-    if (!this.isWellFormed(token)) {
+    if (!SessionEntity.isWellFormed(token)) {
       await this.store.deleteByUserId(userId);
       return;
     }
 
-    await this.store.deleteByUserIdExcept(userId, this.hash(token));
+    await this.store.deleteByUserIdExcept(userId, SessionEntity.hash(token));
   }
 
   public async revokeAllForUser(userId: string): Promise<void> {
@@ -131,22 +123,5 @@ export class SessionsService extends Service {
     await Promise.all(
       doomed.map((s) => this.store.deleteByTokenHash(s.tokenHash)),
     );
-  }
-
-  private truncate(
-    value: string | null | undefined,
-    maxLength: number,
-  ): string | null {
-    if (!value) return null;
-
-    return value.slice(0, maxLength);
-  }
-
-  private isWellFormed(token: string | undefined): token is string {
-    return Boolean(token) && SESSION_TOKEN_PATTERN.test(token!);
-  }
-
-  private hash(token: string): string {
-    return createHash("sha256").update(token).digest("hex");
   }
 }
