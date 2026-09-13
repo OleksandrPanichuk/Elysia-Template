@@ -1,4 +1,5 @@
 import { defineRoute } from "@/core/route";
+import { SIGN_IN_RATE_LIMIT } from "@/modules/rate-limit";
 import { writeSessionCookie } from "@/modules/sessions";
 
 import { AuthSessionModel } from "../auth.model";
@@ -10,6 +11,11 @@ export const signInRoute = ({ signIn }: AuthActions) =>
     body: SignInInput,
     response: AuthSessionModel,
     summary: "Sign in",
+    rateLimit: {
+      ...SIGN_IN_RATE_LIMIT,
+      scope: "auth:sign-in",
+      key: ({ body }) => `email:${body.email.trim().toLowerCase()}`,
+    },
 
     action: ({ body }) =>
       signIn.execute({
