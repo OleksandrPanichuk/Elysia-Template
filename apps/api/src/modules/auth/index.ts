@@ -1,4 +1,9 @@
 export {
+  MAIL_RATE_LIMIT,
+  SIGN_IN_RATE_LIMIT,
+  SIGN_UP_RATE_LIMIT,
+} from "./auth.constants";
+export {
   EmailAlreadyInUseError,
   InvalidCredentialsError,
   InvalidTokenError,

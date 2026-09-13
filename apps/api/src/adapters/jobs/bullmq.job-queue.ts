@@ -8,13 +8,13 @@ import {
 
 import { getLogger } from "@/infrastructure";
 import type { RedisConnection } from "@/infrastructure/redis";
-import type { Job } from "@/modules/jobs/job";
-import type { EnqueueJobOptions, JobMeta } from "@/modules/jobs/job.typedefs";
+import type { Job } from "@/platform/jobs/job";
+import type { EnqueueJobOptions, JobMeta } from "@/platform/jobs/job.typedefs";
 import {
   JobQueueUnavailableError,
   UnprocessableJobError,
-} from "@/modules/jobs/jobs.errors";
-import { JobQueue } from "@/modules/jobs/ports/job-queue";
+} from "@/platform/jobs/jobs.errors";
+import { JobQueue } from "@/platform/jobs/ports/job-queue";
 
 const DEFAULT_ATTEMPTS = 5;
 const DEFAULT_BACKOFF_MS = 2_000;

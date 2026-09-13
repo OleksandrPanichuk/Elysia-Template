@@ -1,6 +1,6 @@
 import type { Elysia } from "elysia";
 
-import type { modules } from "@/modules";
+import type { modules } from "@/app.modules";
 
 type ModuleRouteApp<Module> = Module extends { routes?: () => infer App }
   ? App extends undefined

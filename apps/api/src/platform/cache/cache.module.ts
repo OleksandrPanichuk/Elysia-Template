@@ -6,6 +6,7 @@ import { defineModule } from "@/core/module";
 import { bind } from "@/core/registry";
 import { RedisConnection } from "@/infrastructure/redis";
 
+import { cachePlugin } from "./cache.plugin";
 import { Cache } from "./ports";
 
 export const cacheModule = defineModule({
@@ -35,6 +36,8 @@ export const cacheModule = defineModule({
 
     return { cache, connection };
   },
+
+  plugins: () => cachePlugin,
 
   start: ({ state }) => state.cache.verify(),
 

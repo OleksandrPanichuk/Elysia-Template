@@ -7,6 +7,7 @@ import { bind } from "@/core/registry";
 import { getRedisConnection } from "@/infrastructure/redis";
 
 import { RateLimitStore } from "./ports";
+import { rateLimitPlugin } from "./rate-limit.plugin";
 
 export const rateLimitModule = defineModule({
   name: "rate-limit",
@@ -36,6 +37,8 @@ export const rateLimitModule = defineModule({
 
     return { store, connection };
   },
+
+  plugins: () => rateLimitPlugin,
 
   start: async ({ state }) => {
     await state.connection?.connect();

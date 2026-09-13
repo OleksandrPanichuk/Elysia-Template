@@ -1,6 +1,6 @@
 import { defineRoute } from "@/core/route";
-import { MAIL_RATE_LIMIT } from "@/modules/rate-limit";
 
+import { MAIL_RATE_LIMIT } from "../auth.constants";
 import { AuthMessageModel } from "../auth.model";
 import type { AuthActions } from "../auth.routes";
 import { SendEmailVerificationTokenInput } from "../dto";

@@ -6,8 +6,8 @@ import {
   type RateLimitHitOptions,
   type RateLimitHitResult,
   RateLimitStore,
-} from "@/modules/rate-limit/ports/rate-limit-store";
-import { RATE_LIMIT_KEY_PREFIX } from "@/modules/rate-limit/rate-limit.constants";
+} from "@/platform/rate-limit/ports/rate-limit-store";
+import { RATE_LIMIT_KEY_PREFIX } from "@/platform/rate-limit/rate-limit.constants";
 
 type NazliStore = ReturnType<typeof redisStore>;
 

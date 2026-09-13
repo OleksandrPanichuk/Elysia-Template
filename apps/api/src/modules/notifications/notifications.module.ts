@@ -3,7 +3,7 @@ import { SmtpMailer } from "@/adapters/mail/smtp.mailer";
 import { NodeEnv } from "@/configs";
 import { defineModule } from "@/core/module";
 import { bind } from "@/core/registry";
-import { registerJob } from "@/modules/jobs";
+import { registerJob } from "@/platform/jobs";
 
 import { SendEmailJob } from "./jobs";
 import { Mailer } from "./ports/mailer";

@@ -1,6 +1,6 @@
 import type z from "zod";
 
-import { Cache, type CacheSetOptions } from "@/modules/cache/ports/cache";
+import { Cache, type CacheSetOptions } from "@/platform/cache/ports/cache";
 
 interface Entry {
   value: string;
