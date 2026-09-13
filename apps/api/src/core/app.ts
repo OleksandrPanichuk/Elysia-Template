@@ -7,6 +7,7 @@ import type { RoutedApp } from "@/core/app.routes";
 import type { AppModule } from "@/core/module";
 import { modules as defaultModules } from "@/modules";
 import { cachePlugin } from "@/modules/cache";
+import { rateLimitPlugin } from "@/modules/rate-limit";
 import { getSessionCookieName, sessionsPlugin } from "@/modules/sessions";
 import { csrfPlugin, envPlugin, errorPlugin, loggerPlugin } from "@/plugins";
 
@@ -21,6 +22,7 @@ export const createApp = (modules: readonly AppModule[] = defaultModules) => {
     .use(csrfPlugin)
     .use(sessionsPlugin)
     .use(cachePlugin)
+    .use(rateLimitPlugin)
     .use(
       openapi({
         documentation: {

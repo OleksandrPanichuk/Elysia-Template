@@ -49,6 +49,25 @@ export interface RouteCacheHook {
   response: TSchema;
 }
 
+export interface RouteRateLimitOptions<
+  Body extends TSchema | undefined = undefined,
+  Params extends TSchema | undefined = undefined,
+  Query extends TSchema | undefined = undefined,
+  Auth extends boolean = false,
+> {
+  limit: number;
+  windowMs: number;
+  scope?: string;
+  key?: (context: RouteContext<Body, Params, Query, Auth>) => string;
+}
+
+export interface RouteRateLimitHook {
+  limit: number;
+  windowMs: number;
+  scope?: string;
+  key?: (context: RouteContext<TSchema, TSchema, TSchema>) => string;
+}
+
 export type RouteGuard<
   Body extends TSchema | undefined = undefined,
   Params extends TSchema | undefined = undefined,
@@ -69,6 +88,7 @@ interface RouteBase<
   query?: Query;
   auth?: Auth;
   cache?: RouteCacheOptions<Body, Params, Query, Auth>;
+  rateLimit?: RouteRateLimitOptions<Body, Params, Query, Auth>;
   guards?: Array<RouteGuard<Body, Params, Query, Auth>>;
   summary?: string;
   description?: string;
@@ -90,6 +110,7 @@ type RouteHook<
   response: Response;
   detail: RouteDetail;
   cache?: RouteCacheHook;
+  rateLimit?: RouteRateLimitHook;
 } & (Auth extends true ? { auth: true } : object) &
   (Body extends TSchema ? { body: Body } : object) &
   (Params extends TSchema ? { params: Params } : object) &
@@ -156,6 +177,7 @@ export function defineRoute(
     query,
     auth,
     cache,
+    rateLimit,
     guards,
     summary,
     description,
@@ -184,6 +206,7 @@ export function defineRoute(
           },
         }
       : {}),
+    ...(rateLimit ? { rateLimit } : {}),
     response,
     detail: {
       ...(summary ? { summary } : {}),
