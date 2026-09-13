@@ -4,7 +4,7 @@ import { NodeEnv } from "@/configs/env.config";
 import { SECOND } from "@/constants";
 import { defineModule } from "@/core/module";
 import { bind } from "@/core/registry";
-import { RedisConnection } from "@/infrastructure/redis";
+import { getRedisConnection } from "@/infrastructure/redis";
 
 import { SessionStore } from "./session.store";
 
@@ -20,7 +20,7 @@ export const sessionsModule = defineModule({
       return { connection: undefined };
     }
 
-    const connection = new RedisConnection({
+    const connection = getRedisConnection({
       name: "sessions",
       url: env.SESSIONS_REDIS_URL,
       options: {
@@ -41,6 +41,4 @@ export const sessionsModule = defineModule({
   },
 
   ready: ({ state }) => state.connection?.ping() ?? true,
-
-  shutdown: ({ state }) => state.connection?.close(),
 });
