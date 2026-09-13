@@ -15,3 +15,13 @@ export class EmailNotVerifiedError extends ModuleError {
   public readonly status = HttpStatus.Forbidden;
   public readonly code = "EMAIL_NOT_VERIFIED";
 }
+
+export class AccountDeletionNotConfirmedError extends ModuleError {
+  public readonly status = HttpStatus.BadRequest;
+  public readonly code = "ACCOUNT_DELETION_NOT_CONFIRMED";
+}
+
+export class AccountDeletionUnauthorizedError extends ModuleError {
+  public readonly status = HttpStatus.Unauthorized;
+  public readonly code = "ACCOUNT_DELETION_UNAUTHORIZED";
+}

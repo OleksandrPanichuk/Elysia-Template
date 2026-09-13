@@ -15,4 +15,6 @@ export abstract class UsersRepository {
     id: string,
     verifiedAt: Date,
   ): Promise<void>;
+
+  public abstract deleteById(id: string): Promise<void>;
 }

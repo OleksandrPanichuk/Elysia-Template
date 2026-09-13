@@ -69,4 +69,8 @@ export class PostgresUsersRepository extends UsersRepository {
       .set({ emailVerifiedAt: verifiedAt })
       .where(eq(usersSchema.id, id));
   }
+
+  public async deleteById(id: string): Promise<void> {
+    await this.db.delete(usersSchema).where(eq(usersSchema.id, id));
+  }
 }

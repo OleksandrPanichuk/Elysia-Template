@@ -7,3 +7,8 @@ export const UserModel = t.Object({
   emailVerified: t.Boolean(),
 });
 export type UserModel = typeof UserModel.static;
+
+export const UserMessageModel = t.Object({
+  message: t.String(),
+});
+export type UserMessageModel = typeof UserMessageModel.static;
