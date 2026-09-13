@@ -2,7 +2,7 @@ import {
   type RateLimitHitOptions,
   type RateLimitHitResult,
   RateLimitStore,
-} from "@/modules/rate-limit/ports/rate-limit-store";
+} from "@/platform/rate-limit/ports/rate-limit-store";
 
 interface Window {
   count: number;

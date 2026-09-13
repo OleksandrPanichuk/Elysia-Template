@@ -7,6 +7,7 @@ import { bind, makeUseCase } from "@/core/registry";
 import { getRedisConnection } from "@/infrastructure/redis";
 
 import { SessionStore } from "./session.store";
+import { sessionsPlugin } from "./sessions.plugin";
 import { sessionsRoutes } from "./sessions.routes";
 import {
   ListSessionsUseCase,
@@ -41,6 +42,8 @@ export const sessionsModule = defineModule({
 
     return { connection };
   },
+
+  plugins: () => sessionsPlugin,
 
   routes: () =>
     sessionsRoutes({

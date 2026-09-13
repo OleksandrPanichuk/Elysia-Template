@@ -2,14 +2,11 @@ import cors from "@elysia/cors";
 import { openapi } from "@elysiajs/openapi";
 import { Elysia } from "elysia";
 
+import { modules as defaultModules } from "@/app.modules";
 import { getCorsConfig } from "@/configs/cors.config";
 import type { RoutedApp } from "@/core/app.routes";
 import type { AppModule } from "@/core/module";
-import { modules as defaultModules } from "@/modules";
-import { cachePlugin } from "@/modules/cache";
-import { rateLimitPlugin } from "@/modules/rate-limit";
-import { getSessionCookieName, sessionsPlugin } from "@/modules/sessions";
-import { usersPlugin } from "@/modules/users";
+import { getSessionCookieName } from "@/modules/sessions";
 import { csrfPlugin, envPlugin, errorPlugin, loggerPlugin } from "@/plugins";
 
 export const createApp = (modules: readonly AppModule[] = defaultModules) => {
@@ -20,31 +17,33 @@ export const createApp = (modules: readonly AppModule[] = defaultModules) => {
     .use(errorPlugin)
     .use(envPlugin)
     .use(cors(getCorsConfig()))
-    .use(csrfPlugin)
-    .use(sessionsPlugin)
-    .use(usersPlugin)
-    .use(cachePlugin)
-    .use(rateLimitPlugin)
-    .use(
-      openapi({
-        documentation: {
-          info: { title: "API", version: "0.1.0" },
-          components: {
-            securitySchemes: {
-              sessionAuth: {
-                type: "apiKey",
-                in: "cookie",
-                name: getSessionCookieName(),
-              },
+    .use(csrfPlugin);
+
+  const withPlugins = modules.reduce(
+    (app, module) => (module.plugins ? app.use(module.plugins()) : app),
+    base,
+  );
+
+  const withOpenApi = withPlugins.use(
+    openapi({
+      documentation: {
+        info: { title: "API", version: "0.1.0" },
+        components: {
+          securitySchemes: {
+            sessionAuth: {
+              type: "apiKey",
+              in: "cookie",
+              name: getSessionCookieName(),
             },
           },
         },
-      }),
-    );
+      },
+    }),
+  );
 
   return modules.reduce(
     (app, module) => (module.routes ? app.use(module.routes()) : app),
-    base,
+    withOpenApi,
   );
 };
 

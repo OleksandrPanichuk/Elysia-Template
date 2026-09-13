@@ -28,6 +28,8 @@ export interface ModuleDefinition<
 
   readonly register?: (ctx: ModuleContext) => State;
 
+  readonly plugins?: () => AnyElysia;
+
   readonly routes?: () => Routes;
 
   readonly start?: (ctx: ModuleLifecycleContext<State>) => MaybePromise<void>;
@@ -46,6 +48,7 @@ export interface AppModule<
   Routes extends AnyElysia | undefined = AnyElysia | undefined,
 > {
   readonly name: Name;
+  readonly plugins?: () => AnyElysia;
   readonly routes?: () => Routes;
   register(): void;
   start(): Promise<void>;
@@ -85,6 +88,7 @@ export const defineModule = <
 
   return {
     name: def.name,
+    plugins: def.plugins,
     routes: def.routes,
 
     register() {

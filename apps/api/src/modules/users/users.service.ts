@@ -1,6 +1,6 @@
 import { make, makeRepository } from "@/core/registry";
 import { Service } from "@/core/service";
-import { Cache } from "@/modules/cache";
+import { Cache } from "@/platform/cache";
 
 import {
   CachedUserSchema,

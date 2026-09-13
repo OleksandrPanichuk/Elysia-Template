@@ -3,7 +3,7 @@ import type z from "zod";
 
 import { getLogger } from "@/infrastructure";
 import type { RedisConnection } from "@/infrastructure/redis";
-import { Cache, type CacheSetOptions } from "@/modules/cache/ports/cache";
+import { Cache, type CacheSetOptions } from "@/platform/cache/ports/cache";
 
 export class RedisCache extends Cache {
   constructor(

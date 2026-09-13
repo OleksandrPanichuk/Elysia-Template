@@ -1,6 +1,6 @@
 import { SECOND } from "@/constants";
 import { make } from "@/core/registry";
-import { type EnqueueJobOptions, Job } from "@/modules/jobs";
+import { type EnqueueJobOptions, Job } from "@/platform/jobs";
 
 import {
   EmailKind,

@@ -1,8 +1,8 @@
 import { defineRoute } from "@/core/route";
-import { SIGN_IN_RATE_LIMIT } from "@/modules/rate-limit";
 import { writeSessionCookie } from "@/modules/sessions";
 import { getClientInfo } from "@/shared";
 
+import { SIGN_IN_RATE_LIMIT } from "../auth.constants";
 import { AuthSessionModel } from "../auth.model";
 import type { AuthActions } from "../auth.routes";
 import { SignInInput } from "../dto";

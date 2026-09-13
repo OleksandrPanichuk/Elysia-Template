@@ -1,8 +1,8 @@
 import { getLogger } from "@/infrastructure";
-import type { Job } from "@/modules/jobs/job";
-import type { EnqueueJobOptions, JobMeta } from "@/modules/jobs/job.typedefs";
-import { UnprocessableJobError } from "@/modules/jobs/jobs.errors";
-import { JobQueue } from "@/modules/jobs/ports/job-queue";
+import type { Job } from "@/platform/jobs/job";
+import type { EnqueueJobOptions, JobMeta } from "@/platform/jobs/job.typedefs";
+import { UnprocessableJobError } from "@/platform/jobs/jobs.errors";
+import { JobQueue } from "@/platform/jobs/ports/job-queue";
 
 export class MemoryJobQueue extends JobQueue {
   private readonly jobs = new Map<string, Job<unknown>>();

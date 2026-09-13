@@ -44,15 +44,25 @@ CreateUserInput  ->  <UseCase>Options  ->  CreateUserData  ->  UserEntity  ->  U
 Keep them distinct even when identical — an HTTP-only field (a captcha token,
 say) must not be able to reach the database layer.
 
-## Layering: modules, adapters, infrastructure
+## Layering: modules, platform, adapters, infrastructure
 
-Where a file lives is decided by what it imports.
+Where a file lives is decided by what it imports and by whether it has a domain.
 
 ```
-modules/<name>/          domain, ports (abstract classes), use cases, routes, DB repositories
-adapters/<capability>/   implementations of module ports over an external technology
+modules/<name>/          product features: entities, use cases, routes, DB repositories, their ports
+platform/<capability>/   app capabilities with no domain: a port, a lifecycle, optionally an Elysia macro
+adapters/<capability>/   implementations of module or platform ports over an external technology
 infrastructure/<tech>/   technology clients: connect, reconnect, ping, close
 ```
+
+- **`platform/`** holds what the app offers to modules rather than to users:
+  `cache`, `jobs`, `rate-limit`, `health`. The test is "does it have a domain?" —
+  an entity, a repository, a use case or a route about the product belongs in
+  `modules/`; a port plus a `defineModule` lifecycle that any module may consume
+  belongs in `platform/`. Both go through `defineModule`, so a platform folder
+  still opens, verifies and closes its own connections. `platform/` imports from
+  `core`, `shared`, `configs`, and — only inside its module definition file — from
+  `adapters/` and `infrastructure/`. It never imports from `modules/`.
 
 - **`infrastructure/`** knows nothing about the domain. A file here imports only
   `configs` and `shared`, and could be copied into an unrelated project
@@ -105,8 +115,9 @@ module's `start` and `shutdown` hooks.
 
 ## Module lifecycle
 
-`defineModule` gives every module four hooks. `register` is **synchronous** and
-returns the module's state; the other three receive it as `{ state }`.
+`defineModule` gives every module four lifecycle hooks plus two mount points,
+`plugins` and `routes`. `register` is **synchronous** and returns the module's
+state; the other three lifecycle hooks receive it as `{ state }`.
 
 ```ts
 export const cacheModule = defineModule({
@@ -132,12 +143,18 @@ export const cacheModule = defineModule({
     return { cache, connection };
   },
 
+  plugins: () => cachePlugin,
+
   start: ({ state }) => state.cache.verify(),
   ready: ({ state }) => state.connection?.ping() ?? true,
   shutdown: ({ state }) => state.cache.close(),
 });
 ```
 
+- **`plugins`** — the module's Elysia macros (`auth`, `cache`, `rateLimit`,
+  `verifiedEmail`), mounted by `createApp` before any route. A macro's hooks run
+  in the order of the keys `defineRoute` puts on the route, not in module order,
+  so module order is free to follow start-up dependencies alone.
 - **`register`** — declare intent, never do I/O. Construct adapters and
   connections, `bind` ports, `registerJob`, and return state. It must be
   synchronous (the type system enforces this), so anything that awaits belongs
@@ -154,7 +171,7 @@ bound under `NODE_ENV=test`, so the whole app boots in-process with no Redis,
 SMTP or network. Choose the adapter in `register` — never branch on the
 environment inside the adapter itself.
 
-**Order in `modules/index.ts` is load-bearing.** A module must come after the
+**Order in `app.modules.ts` is load-bearing.** A module must come after the
 modules it depends on at `start`, and `jobsModule` stays **last**: it begins
 consuming after every producer's dependencies are up, and reverse-order
 shutdown stops it consuming before anything it calls is torn down.
