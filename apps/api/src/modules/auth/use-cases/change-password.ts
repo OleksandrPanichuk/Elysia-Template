@@ -9,6 +9,8 @@ export interface ChangePasswordUseCaseOptions {
   userId: string;
   currentPassword: string;
   password: string;
+  userAgent?: string | null;
+  ip?: string | null;
 }
 
 type Options = ChangePasswordUseCaseOptions;
@@ -25,6 +27,8 @@ export class ChangePasswordUseCase extends UseCase<Options, Result> {
     userId,
     currentPassword,
     password,
+    userAgent,
+    ip,
   }: Options): Promise<Result> {
     const account = await this.accountsRepository.findByUserIdAndType(
       userId,
@@ -55,6 +59,6 @@ export class ChangePasswordUseCase extends UseCase<Options, Result> {
 
     await this.sessionsService.revokeAllForUser(userId);
 
-    return this.sessionsService.create(userId);
+    return this.sessionsService.create(userId, { userAgent, ip });
   }
 }

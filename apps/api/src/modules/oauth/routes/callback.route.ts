@@ -5,6 +5,7 @@ import { HttpStatus } from "@/core/http";
 import { makeService } from "@/core/registry";
 import { defineRoute } from "@/core/route";
 import { writeSessionCookie } from "@/modules/sessions";
+import { getClientInfo } from "@/shared";
 
 import { OAuthCallbackQuery, OAuthProviderParams } from "../dto";
 import { OAuthTransactionInvalidError } from "../oauth.errors";
@@ -34,7 +35,12 @@ export const callbackRoute = ({
     response: t.Void(),
     summary: "Complete OAuth sign-in",
 
-    action: async ({ params, query, cookie }): Promise<CallbackOutcome> => {
+    action: async ({
+      params,
+      query,
+      cookie,
+      request,
+    }): Promise<CallbackOutcome> => {
       let transaction: OAuthTransaction;
 
       try {
@@ -85,6 +91,7 @@ export const callbackRoute = ({
           code: query.code,
           codeVerifier: transaction.codeVerifier,
           nonce: transaction.nonce,
+          ...getClientInfo(request),
         });
 
         return {
