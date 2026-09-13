@@ -87,6 +87,7 @@ interface RouteBase<
   params?: Params;
   query?: Query;
   auth?: Auth;
+  verifiedEmail?: boolean;
   cache?: RouteCacheOptions<Body, Params, Query, Auth>;
   rateLimit?: RouteRateLimitOptions<Body, Params, Query, Auth>;
   guards?: Array<RouteGuard<Body, Params, Query, Auth>>;
@@ -111,6 +112,7 @@ type RouteHook<
   detail: RouteDetail;
   cache?: RouteCacheHook;
   rateLimit?: RouteRateLimitHook;
+  verifiedEmail?: true;
 } & (Auth extends true ? { auth: true } : object) &
   (Body extends TSchema ? { body: Body } : object) &
   (Params extends TSchema ? { params: Params } : object) &
@@ -176,6 +178,7 @@ export function defineRoute(
     params,
     query,
     auth,
+    verifiedEmail,
     cache,
     rateLimit,
     guards,
@@ -197,6 +200,7 @@ export function defineRoute(
     ...(query ? { query } : {}),
     ...(guards?.length ? { beforeHandle: guards } : {}),
     ...(auth ? { auth: true as const } : {}),
+    ...(verifiedEmail ? { verifiedEmail: true as const } : {}),
     ...(cache
       ? {
           cache: {

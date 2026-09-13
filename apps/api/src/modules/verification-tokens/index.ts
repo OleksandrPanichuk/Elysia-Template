@@ -8,3 +8,8 @@ export {
   type CreateVerificationTokenData,
   VerificationTokensRepository,
 } from "./verification-tokens.repository";
+export {
+  type IssuedVerificationToken,
+  type IssueVerificationTokenInput,
+  VerificationTokensService,
+} from "./verification-tokens.service";

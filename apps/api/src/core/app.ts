@@ -9,6 +9,7 @@ import { modules as defaultModules } from "@/modules";
 import { cachePlugin } from "@/modules/cache";
 import { rateLimitPlugin } from "@/modules/rate-limit";
 import { getSessionCookieName, sessionsPlugin } from "@/modules/sessions";
+import { usersPlugin } from "@/modules/users";
 import { csrfPlugin, envPlugin, errorPlugin, loggerPlugin } from "@/plugins";
 
 export const createApp = (modules: readonly AppModule[] = defaultModules) => {
@@ -21,6 +22,7 @@ export const createApp = (modules: readonly AppModule[] = defaultModules) => {
     .use(cors(getCorsConfig()))
     .use(csrfPlugin)
     .use(sessionsPlugin)
+    .use(usersPlugin)
     .use(cachePlugin)
     .use(rateLimitPlugin)
     .use(

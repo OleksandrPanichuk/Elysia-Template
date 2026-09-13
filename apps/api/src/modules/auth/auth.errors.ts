@@ -21,11 +21,6 @@ export class TokenExpiredError extends ModuleError {
   public readonly code = "TOKEN_EXPIRED";
 }
 
-export class EmailNotVerifiedError extends ModuleError {
-  public readonly status = HttpStatus.Forbidden;
-  public readonly code = "EMAIL_NOT_VERIFIED";
-}
-
 export class PasswordAlreadySetError extends ModuleError {
   public readonly status = HttpStatus.Conflict;
   public readonly code = "PASSWORD_ALREADY_SET";
