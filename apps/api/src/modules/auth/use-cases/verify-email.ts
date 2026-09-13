@@ -4,6 +4,7 @@ import { transaction } from "@/db/executor";
 import { UsersService } from "@/modules/users";
 import {
   VerificationTokenEntity,
+  VerificationTokenKind,
   VerificationTokensRepository,
 } from "@/modules/verification-tokens";
 
@@ -38,7 +39,7 @@ export class VerifyEmailUseCase extends UseCase<Options, Result> {
       const verificationToken =
         await this.tokensRepository.findActiveByTokenHash(
           tokenHash,
-          "email_verification",
+          VerificationTokenKind.EmailVerification,
         );
 
       if (!verificationToken) {
@@ -62,7 +63,7 @@ export class VerifyEmailUseCase extends UseCase<Options, Result> {
 
       await this.tokensRepository.invalidateAllForUser(
         verificationToken.userId,
-        "email_verification",
+        VerificationTokenKind.EmailVerification,
         consumedAt,
       );
 

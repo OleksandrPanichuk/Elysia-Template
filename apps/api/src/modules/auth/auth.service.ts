@@ -6,7 +6,10 @@ import {
   NotificationsService,
 } from "@/modules/notifications";
 import type { UserEntity } from "@/modules/users";
-import { VerificationTokensService } from "@/modules/verification-tokens";
+import {
+  VerificationTokenKind,
+  VerificationTokensService,
+} from "@/modules/verification-tokens";
 
 export class AuthService extends Service {
   private readonly tokensService = makeService(VerificationTokensService);
@@ -18,14 +21,14 @@ export class AuthService extends Service {
 
     const { token } = await this.tokensService.issue({
       userId: user.id,
-      type: "email_verification",
+      type: VerificationTokenKind.EmailVerification,
       ttlSeconds: env.EMAIL_VERIFICATION_TTL_SECONDS,
     });
 
     const verificationUrl = new URL("/verify-email", env.APP_URL);
     verificationUrl.searchParams.set("token", token);
 
-    await this.deliver("email_verification", user.id, () =>
+    await this.deliver(VerificationTokenKind.EmailVerification, user.id, () =>
       this.notificationsService.sendEmailVerification({
         userId: user.id,
         email: user.email,
@@ -43,14 +46,14 @@ export class AuthService extends Service {
 
     const { token } = await this.tokensService.issue({
       userId: user.id,
-      type: "password_reset",
+      type: VerificationTokenKind.PasswordReset,
       ttlSeconds: env.PASSWORD_RESET_TTL_SECONDS,
     });
 
     const resetUrl = new URL("/reset-password", env.APP_URL);
     resetUrl.searchParams.set("token", token);
 
-    await this.deliver("password_reset", user.id, () =>
+    await this.deliver(VerificationTokenKind.PasswordReset, user.id, () =>
       this.notificationsService.sendPasswordReset({
         userId: user.id,
         email: user.email,
@@ -62,7 +65,7 @@ export class AuthService extends Service {
   }
 
   private async deliver(
-    notification: string,
+    notification: VerificationTokenKind,
     userId: string,
     send: () => Promise<void>,
   ): Promise<void> {

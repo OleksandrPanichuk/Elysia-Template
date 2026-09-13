@@ -5,6 +5,7 @@ import { AccountsRepository, AccountsService } from "@/modules/accounts";
 import { SessionsService } from "@/modules/sessions";
 import {
   VerificationTokenEntity,
+  VerificationTokenKind,
   VerificationTokensRepository,
 } from "@/modules/verification-tokens";
 
@@ -42,7 +43,7 @@ export class ResetPasswordUseCase extends UseCase<Options, Result> {
 
     const resetToken = await this.tokensRepository.findActiveByTokenHash(
       tokenHash,
-      "password_reset",
+      VerificationTokenKind.PasswordReset,
     );
 
     if (!resetToken) {
@@ -71,7 +72,7 @@ export class ResetPasswordUseCase extends UseCase<Options, Result> {
 
       await this.tokensRepository.invalidateAllForUser(
         resetToken.userId,
-        "password_reset",
+        VerificationTokenKind.PasswordReset,
         consumedAt,
       );
     });

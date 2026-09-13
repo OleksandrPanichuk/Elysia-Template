@@ -3,11 +3,12 @@ import { makeRepository } from "@/core/registry";
 import { Service } from "@/core/service";
 
 import { VerificationTokenEntity } from "./verification-token.entity";
+import type { VerificationTokenKind } from "./verification-tokens.constans";
 import { VerificationTokensRepository } from "./verification-tokens.repository";
 
 export interface IssueVerificationTokenInput {
   userId: string;
-  type: "email_verification" | "password_reset";
+  type: VerificationTokenKind;
   ttlSeconds: number;
 }
 
