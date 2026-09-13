@@ -10,6 +10,8 @@ import {
   UsersService,
 } from "@/modules/users";
 
+import { AuthService } from "../auth.service";
+
 export interface SignUpUseCaseOptions {
   email: string;
   password: string;
@@ -29,6 +31,8 @@ export class SignUpUseCase extends UseCase<Options, Result> {
   private readonly usersRepository = makeRepository(UsersRepository);
 
   private readonly sessionsService = makeService(SessionsService);
+
+  private readonly authService = makeService(AuthService);
 
   private readonly runInTransaction = transaction;
 
@@ -57,6 +61,8 @@ export class SignUpUseCase extends UseCase<Options, Result> {
 
       return createdUser;
     });
+
+    await this.authService.sendEmailVerification(user);
 
     return this.sessionsService.create(user.id);
   }

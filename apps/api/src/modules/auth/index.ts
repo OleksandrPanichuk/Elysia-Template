@@ -1,6 +1,5 @@
 export {
   EmailAlreadyInUseError,
-  EmailNotVerifiedError,
   InvalidCredentialsError,
   InvalidTokenError,
   PasswordAlreadySetError,
@@ -14,5 +13,6 @@ export {
 } from "./auth.model";
 export { authModule } from "./auth.module";
 export { type AuthActions, authRoutes } from "./auth.routes";
+export { AuthService } from "./auth.service";
 export * from "./dto";
 export * from "./use-cases";
