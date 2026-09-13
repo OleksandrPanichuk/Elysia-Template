@@ -27,6 +27,9 @@ out/
 build
 dist
 
+# Docs
+docs
+
 
 # Debug
 npm-debug.log*
