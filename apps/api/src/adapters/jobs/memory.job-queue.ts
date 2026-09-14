@@ -36,6 +36,17 @@ export class MemoryJobQueue extends JobQueue {
     this.jobs.set(job.name, job);
   }
 
+  public schedule<T>(job: Job<T>): Promise<void> {
+    if (job.schedule) {
+      getLogger().debug(
+        { component: "MemoryJobQueue", job: job.name },
+        "schedules do not run in memory; skipping",
+      );
+    }
+
+    return Promise.resolve();
+  }
+
   public close(): Promise<void> {
     this.jobs.clear();
 

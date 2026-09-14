@@ -38,8 +38,12 @@ export const jobsModule = defineModule({
   start: async ({ state }) => {
     await state.queue.verify();
 
-    for (const job of registeredJobs()) {
-      state.queue.process(make(job));
+    for (const token of registeredJobs()) {
+      const job = make(token);
+
+      state.queue.process(job);
+
+      await state.queue.schedule(job);
     }
   },
 
