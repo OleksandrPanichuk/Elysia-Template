@@ -67,6 +67,15 @@ infrastructure/<tech>/   technology clients: connect, reconnect, ping, close
 - **`infrastructure/`** knows nothing about the domain. A file here imports only
   `configs` and `shared`, and could be copied into an unrelated project
   unchanged. Redis client, S3 client, Kafka connection, logger.
+
+  A Redis connection is taken one of two ways, and the name says who closes it.
+  `getSharedRedisConnection` pools by url, so two modules pointed at one server
+  use one socket; nothing that receives one may close it, and
+  `closeInfrastructure` releases them all after every module has stopped.
+  `createOwnedRedisConnection` hands back a connection the caller closes itself.
+  Jobs takes that second path deliberately: BullMQ needs blocking connections
+  with `maxRetriesPerRequest: null`, which is incompatible with the options a
+  plain command client wants, so its connection cannot be shared.
 - **`adapters/`** implement a port a module declares, using an infrastructure
   client. This is the only layer that imports from both `modules/` and
   `infrastructure/`. `RedisSessionStore` extends `SessionStore` and uses a

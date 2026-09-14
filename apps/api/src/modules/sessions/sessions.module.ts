@@ -4,7 +4,7 @@ import { NodeEnv } from "@/configs/env.config";
 import { SECOND } from "@/constants";
 import { defineModule } from "@/core/module";
 import { bind, makeUseCase } from "@/core/registry";
-import { getRedisConnection } from "@/infrastructure/redis";
+import { getSharedRedisConnection } from "@/infrastructure/redis";
 
 import { SessionStore } from "./session.store";
 import { sessionsPlugin } from "./sessions.plugin";
@@ -27,7 +27,7 @@ export const sessionsModule = defineModule({
       return { connection: undefined };
     }
 
-    const connection = getRedisConnection({
+    const connection = getSharedRedisConnection({
       name: "sessions",
       url: env.SESSIONS_REDIS_URL,
       options: {

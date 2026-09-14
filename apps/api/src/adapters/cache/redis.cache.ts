@@ -96,10 +96,6 @@ export class RedisCache extends Cache {
     }
   }
 
-  public close(): Promise<void> {
-    return this.connection.close();
-  }
-
   private ready(): Redis | null {
     const client = this.connection.instance;
 

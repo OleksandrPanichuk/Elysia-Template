@@ -3,7 +3,7 @@ import { MemoryJobQueue } from "@/adapters/jobs/memory.job-queue";
 import { NodeEnv } from "@/configs";
 import { defineModule } from "@/core/module";
 import { bind, make } from "@/core/registry";
-import { RedisConnection } from "@/infrastructure/redis";
+import { createOwnedRedisConnection } from "@/infrastructure/redis";
 
 import { registeredJobs } from "./job.registry";
 import { JobQueue } from "./ports";
@@ -20,7 +20,7 @@ export const jobsModule = defineModule({
       return { queue, connection: undefined };
     }
 
-    const connection = new RedisConnection({
+    const connection = createOwnedRedisConnection({
       name: "jobs",
       url: env.JOBS_REDIS_URL,
       options: {
