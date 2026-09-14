@@ -166,6 +166,13 @@ for local development.
 each port falls back to an in-memory adapter so the whole app boots in-process
 with no external services.
 
+Behind a proxy, set `TRUSTED_PROXY_HEADER` to the header that proxy sets and
+`TRUSTED_PROXY_DEPTH` to how many proxies stand between the client and the API.
+Until you do, the client address comes from the socket and forwarded headers are
+ignored, because anyone can send them: rate limits keyed by address would
+otherwise be defeated by varying the header, and session device information
+would record whatever the caller claimed.
+
 OAuth is optional: set `OAUTH_STATE_SECRET` (32+ characters),
 `OAUTH_REDIRECT_BASE`, and the client ID and secret for each provider you want
 (`GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`, `GITHUB_CLIENT_ID` /

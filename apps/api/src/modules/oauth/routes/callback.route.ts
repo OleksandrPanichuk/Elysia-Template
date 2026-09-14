@@ -37,6 +37,7 @@ export const callbackRoute = ({
       query,
       cookie,
       request,
+      server,
     }): Promise<CallbackOutcome> => {
       let transaction: OAuthTransaction;
 
@@ -88,7 +89,7 @@ export const callbackRoute = ({
           code: query.code,
           codeVerifier: transaction.codeVerifier,
           nonce: transaction.nonce,
-          ...getClientInfo(request),
+          ...getClientInfo(request, server),
         });
 
         return {
