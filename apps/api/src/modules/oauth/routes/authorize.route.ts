@@ -1,15 +1,12 @@
 import { t } from "elysia";
 
 import { HttpStatus } from "@/core/http";
-import { makeService } from "@/core/registry";
 import { defineRoute } from "@/core/route";
 
 import { OAuthAuthorizeQuery, OAuthProviderParams } from "../dto";
 import { sanitizeRedirectPath } from "../oauth.redirect";
 import type { OAuthActions } from "../oauth.routes";
-import { OAuthTransactions } from "../oauth.transaction";
-
-const transactions = makeService(OAuthTransactions);
+import { OAuthTransaction } from "../oauth-transaction.entity";
 
 export const authorizeRoute = ({ startOAuthFlow }: OAuthActions) =>
   defineRoute({
@@ -25,7 +22,7 @@ export const authorizeRoute = ({ startOAuthFlow }: OAuthActions) =>
       }),
 
     postAction: ({ cookie, output, set }) => {
-      transactions.write(cookie, output.transaction);
+      OAuthTransaction.write(cookie, output.transaction);
 
       set.status = HttpStatus.Found;
       set.headers.location = output.authorizationUrl;
