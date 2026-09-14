@@ -28,8 +28,7 @@ export { type OAuthActions, oauthRoutes } from "./oauth.routes";
 export {
   type IssueOAuthTransactionOptions,
   type OAuthTransaction,
-  OAuthTransactions,
-} from "./oauth.transaction";
+} from "./oauth-transaction.entity";
 export * from "./ports";
 export {
   type OAuthAuthorizationRequest,

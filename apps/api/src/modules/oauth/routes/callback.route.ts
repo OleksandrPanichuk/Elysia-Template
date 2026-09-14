@@ -2,7 +2,6 @@ import { t } from "elysia";
 
 import { AppError } from "@/core/errors";
 import { HttpStatus } from "@/core/http";
-import { makeService } from "@/core/registry";
 import { defineRoute } from "@/core/route";
 import { writeSessionCookie } from "@/modules/sessions";
 import { getClientInfo } from "@/shared";
@@ -11,7 +10,7 @@ import { OAuthCallbackQuery, OAuthProviderParams } from "../dto";
 import { OAuthTransactionInvalidError } from "../oauth.errors";
 import { resolveAppErrorUrl, resolveAppUrl } from "../oauth.redirect";
 import type { OAuthActions } from "../oauth.routes";
-import { type OAuthTransaction, OAuthTransactions } from "../oauth.transaction";
+import { OAuthTransaction } from "../oauth-transaction.entity";
 
 const OAUTH_DENIED_CODE = "OAUTH_DENIED";
 const OAUTH_FAILED_CODE = "OAUTH_FAILED";
@@ -22,8 +21,6 @@ interface CallbackOutcome {
   errorCode: string | null;
   session: { token: string; expiresAt: number } | null;
 }
-
-const transactions = makeService(OAuthTransactions);
 
 export const callbackRoute = ({
   completeOAuthFlow,
@@ -48,7 +45,7 @@ export const callbackRoute = ({
           throw new OAuthTransactionInvalidError("Invalid sign-in attempt");
         }
 
-        transaction = transactions.consume(
+        transaction = OAuthTransaction.consume(
           cookie,
           params.provider,
           query.state,
