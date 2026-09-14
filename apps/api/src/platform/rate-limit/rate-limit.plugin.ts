@@ -1,4 +1,5 @@
 import { Elysia } from "elysia";
+import type { Server } from "elysia/universal/server";
 
 import type { AuthUser } from "@/core/auth";
 import { make } from "@/core/registry";
@@ -10,6 +11,7 @@ import { RateLimitExceededError } from "./rate-limit.errors";
 
 interface RateLimitContext {
   request: Request;
+  server: Server | null;
   path: string;
   body: unknown;
   user?: AuthUser;
@@ -21,7 +23,7 @@ interface RateLimitContext {
 const defaultKey = (context: RateLimitContext): string =>
   context.user
     ? `user:${context.user.id}`
-    : `ip:${getClientIp(context.request) ?? "unknown"}`;
+    : `ip:${getClientIp(context.request, context.server) ?? "unknown"}`;
 
 const rateLimitKey = (
   context: RateLimitContext,

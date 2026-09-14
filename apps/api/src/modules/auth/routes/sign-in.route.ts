@@ -18,11 +18,11 @@ export const signInRoute = ({ signIn }: AuthActions) =>
       key: ({ body }) => `email:${body.email.trim().toLowerCase()}`,
     },
 
-    action: ({ body, request }) =>
+    action: ({ body, request, server }) =>
       signIn.execute({
         email: body.email,
         password: body.password,
-        ...getClientInfo(request),
+        ...getClientInfo(request, server),
       }),
     postAction: ({ cookie, output }) => {
       writeSessionCookie(cookie, {

@@ -4,7 +4,10 @@ import type { AuthUser } from "./auth";
 
 type Static<S> = S extends TSchema ? S["static"] : never;
 
-type RawContext = Pick<Context, "request" | "headers" | "cookie" | "set"> & {
+type RawContext = Pick<
+  Context,
+  "request" | "headers" | "cookie" | "set" | "server"
+> & {
   body: unknown;
   params: unknown;
   query: unknown;
@@ -23,6 +26,7 @@ type RouteContext<
   headers: Context["headers"];
   cookie: Context["cookie"];
   set: Context["set"];
+  server: Context["server"];
 } & (Auth extends true ? { user: AuthUser } : object);
 
 type PostActionContext<

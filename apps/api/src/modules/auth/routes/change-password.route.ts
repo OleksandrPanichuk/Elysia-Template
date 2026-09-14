@@ -13,12 +13,12 @@ export const changePasswordRoute = ({ changePassword }: AuthActions) =>
     summary: "Change the account password",
     auth: true,
 
-    action: ({ body, user, request }) =>
+    action: ({ body, user, request, server }) =>
       changePassword.execute({
         userId: user.id,
         currentPassword: body.currentPassword,
         password: body.password,
-        ...getClientInfo(request),
+        ...getClientInfo(request, server),
       }),
     postAction: ({ cookie, output }) => {
       writeSessionCookie(cookie, {

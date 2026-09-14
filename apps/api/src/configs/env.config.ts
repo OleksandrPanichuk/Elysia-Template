@@ -71,6 +71,9 @@ export const EnvSchema = z.object({
   CACHE_REDIS_URL: z.url({ protocol: /^rediss?$/ }).optional(),
   RATE_LIMIT_REDIS_URL: z.url({ protocol: /^rediss?$/ }).optional(),
 
+  TRUSTED_PROXY_HEADER: z.string().trim().min(1).toLowerCase().optional(),
+  TRUSTED_PROXY_DEPTH: z.coerce.number().int().min(1).max(10).default(1),
+
   OAUTH_STATE_SECRET: z.string().min(32).optional(),
   OAUTH_REDIRECT_BASE: z
     .url({ protocol: /^https?$/ })
