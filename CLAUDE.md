@@ -202,6 +202,25 @@ Dispatch through the job, not the queue: `make(SendEmailJob).dispatch(payload)`.
 The zod `schema` is validated when the job is **consumed**, not when it is
 dispatched — a malformed payload fails the job without burning retries.
 
+A job that runs on a clock declares its own `schedule` rather than being
+enqueued by anyone:
+
+```ts
+export class PurgeSpentTokensJob extends Job<PurgeSpentTokensPayload> {
+  public readonly schedule: JobSchedule<PurgeSpentTokensPayload> = {
+    pattern: PURGE_SPENT_TOKENS_PATTERN,
+    payload: {},
+  };
+}
+```
+
+`JobSchedule` is generic over the job's payload, so the declared payload is
+checked against the same `schema` the handler receives. `jobsModule.start`
+upserts the schedule next to registering the handler, keyed by the job name, so
+booting twice leaves one schedule rather than two. Schedules do not fire under
+`NODE_ENV=test` — `MemoryJobQueue` accepts them and does nothing, so a test run
+never waits on a clock.
+
 ## Caching
 
 Two layers, with different invalidation stories. Pick deliberately.

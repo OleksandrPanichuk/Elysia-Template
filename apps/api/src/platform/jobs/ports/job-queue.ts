@@ -10,6 +10,8 @@ export abstract class JobQueue {
 
   public abstract process<T>(job: Job<T>): void;
 
+  public abstract schedule<T>(job: Job<T>): Promise<void>;
+
   public verify(): Promise<void> {
     return Promise.resolve();
   }

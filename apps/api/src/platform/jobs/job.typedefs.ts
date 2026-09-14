@@ -9,6 +9,12 @@ export interface EnqueueJobOptions {
   };
 }
 
+export interface JobSchedule<Payload> {
+  pattern: string;
+  payload: Payload;
+  jobId?: string;
+}
+
 export interface JobMeta {
   readonly jobId: string;
   readonly name: string;

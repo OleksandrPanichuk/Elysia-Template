@@ -66,6 +66,33 @@ export class BullMqJobQueue extends JobQueue {
     this.worker(job.queue);
   }
 
+  public async schedule<T>(job: Job<T>): Promise<void> {
+    const schedule = job.schedule;
+
+    if (!schedule) return;
+
+    const schedulerId = schedule.jobId ?? job.name;
+
+    try {
+      await this.queue(job.queue).upsertJobScheduler(
+        schedulerId,
+        { pattern: schedule.pattern },
+        {
+          name: job.name,
+          data: schedule.payload,
+          opts: this.toJobsOptions({ ...job.defaults }),
+        },
+      );
+    } catch (cause) {
+      getLogger().error(
+        { component: "BullMqJobQueue", job: job.name, err: cause },
+        "failed to schedule job",
+      );
+
+      throw new JobQueueUnavailableError(cause);
+    }
+  }
+
   public async verify(): Promise<void> {
     await this.connection.connect();
 
