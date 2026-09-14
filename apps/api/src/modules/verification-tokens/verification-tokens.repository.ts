@@ -26,4 +26,6 @@ export abstract class VerificationTokensRepository {
     type: VerificationTokenType,
     consumedAt: Date,
   ): Promise<void>;
+
+  public abstract deleteSpent(before: Date): Promise<number>;
 }

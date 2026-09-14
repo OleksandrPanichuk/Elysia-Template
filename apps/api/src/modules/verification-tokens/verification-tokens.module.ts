@@ -1,6 +1,8 @@
 import { defineModule } from "@/core/module";
 import { bind } from "@/core/registry";
+import { registerJob } from "@/platform/jobs";
 
+import { PurgeSpentTokensJob } from "./jobs";
 import { PostgresVerificationTokensRepository } from "./repositories";
 import { VerificationTokensRepository } from "./verification-tokens.repository";
 
@@ -12,5 +14,7 @@ export const verificationTokensModule = defineModule({
       VerificationTokensRepository,
       () => new PostgresVerificationTokensRepository(),
     );
+
+    registerJob(PurgeSpentTokensJob);
   },
 });

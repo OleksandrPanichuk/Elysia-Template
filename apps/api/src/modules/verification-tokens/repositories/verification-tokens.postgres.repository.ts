@@ -1,4 +1,4 @@
-import { and, eq, gt, isNull } from "drizzle-orm";
+import { and, eq, gt, isNull, lt, or } from "drizzle-orm";
 
 import { verificationTokensSchema, type VerificationTokenType } from "@/db";
 import { type DBExecutor, getExecutor } from "@/db/executor";
@@ -80,5 +80,19 @@ export class PostgresVerificationTokensRepository extends VerificationTokensRepo
           isNull(verificationTokensSchema.consumedAt),
         ),
       );
+  }
+
+  public async deleteSpent(before: Date): Promise<number> {
+    const deleted = await this.db
+      .delete(verificationTokensSchema)
+      .where(
+        or(
+          lt(verificationTokensSchema.expiresAt, before),
+          lt(verificationTokensSchema.consumedAt, before),
+        ),
+      )
+      .returning({ id: verificationTokensSchema.id });
+
+    return deleted.length;
   }
 }
