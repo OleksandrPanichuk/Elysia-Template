@@ -3,6 +3,9 @@ import { Elysia } from "elysia";
 import { AppError } from "@/core/errors";
 import { HttpStatus } from "@/core/http";
 import { getLogger } from "@/infrastructure";
+import { getRequestContext } from "@/shared";
+
+const INTERNAL_ERROR_MESSAGE = "Something went wrong";
 
 export const errorPlugin = new Elysia({ name: "errors" })
   .onError(({ code, error, set, request }) => {
@@ -28,11 +31,14 @@ export const errorPlugin = new Elysia({ name: "errors" })
       return { code: "NOT_FOUND", error: "Not found" };
     }
 
+    const requestId = getRequestContext()?.requestId;
+
     getLogger().error(
       {
         method: request.method,
         path: new URL(request.url).pathname,
         code,
+        requestId,
         err: error,
       },
       "unhandled error",
@@ -41,7 +47,8 @@ export const errorPlugin = new Elysia({ name: "errors" })
     set.status = HttpStatus.InternalServerError;
     return {
       code: "INTERNAL",
-      error: error instanceof Error ? error.message : String(error),
+      error: INTERNAL_ERROR_MESSAGE,
+      ...(requestId ? { requestId } : {}),
     };
   })
   .as("global");
