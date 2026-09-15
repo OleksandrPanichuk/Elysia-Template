@@ -154,6 +154,50 @@ bun run format        # prettier --write
 the running containers; see [optional services](#optional-services) for
 `make add` and `make run-all`.
 
+## Tests
+
+```bash
+make test              # the suite, against its own Postgres
+make test-integration  # also exercises the real Redis, BullMQ and SMTP adapters
+make test-down         # remove the containers
+```
+
+`make test` starts `docker-compose.test.yml`, which is separate from the
+development stack: different containers, different ports, no volumes. A run
+cannot reach development data, and nothing it writes survives. `bun test` sets `NODE_ENV=test`,
+which makes Bun load `apps/api/.env.test` and every port resolve to its
+in-memory adapter, so Redis, SMTP and the OAuth providers are all doubles. The
+first run creates the `velo_test` database and migrates it, and each test starts
+against empty tables.
+
+`make test-integration` additionally starts Redis and a mail server and runs
+the suites in `apps/api/tests/integration`, which drive `RedisSessionStore`,
+`RedisCache`, `NazliRateLimitStore`, `BullMqJobQueue` and `SmtpMailer` against
+the real thing. They cover what a memory adapter cannot: key layout, TTLs,
+BullMQ's scheduler, and what each adapter does when its server disappears.
+Without those services they skip rather than fail, so `make test` stays fast.
+
+Unit tests sit next to what they cover, as `*.test.ts`. Tests that go through
+HTTP live in `apps/api/tests/`, grouped by area, and use the helpers in
+`apps/api/tests/helpers`:
+
+```ts
+import { createUser, inbox } from "@tests/helpers";
+
+const user = await createUser({ email: "kate@example.test" });
+
+await user.post("/api/auth/verify-email", {
+  token: inbox.tokenFor("kate@example.test"),
+});
+```
+
+`createUser`, `createVerifiedUser` and `createOAuthUser` return a client that
+already carries that user's session, so requests made through it are
+authenticated. `createGuest` is the same client with no session. `inbox` reads
+what the mailer captured, which is how a test gets at a token that only exists
+inside an email. `useOAuthIdentity` decides what the provider double will return
+before a flow runs.
+
 ## Configuration
 
 Environment variables are validated by a zod schema at startup

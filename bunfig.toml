@@ -1,0 +1,6 @@
+# Lets `bun test` work from the repository root as well as from apps/api.
+[test]
+preload = [
+  "./apps/api/tests/helpers/load-env.ts",
+  "./apps/api/tests/helpers/preload.ts",
+]
