@@ -1,4 +1,4 @@
-import { LogMailer } from "@/adapters/mail/log.mailer";
+import { MemoryMailer } from "@/adapters/mail/memory.mailer";
 import { SmtpMailer } from "@/adapters/mail/smtp.mailer";
 import { NodeEnv } from "@/configs";
 import { defineModule } from "@/core/module";
@@ -13,7 +13,7 @@ export const notificationsModule = defineModule({
 
   register: ({ env }) => {
     const mailer: Mailer =
-      env.NODE_ENV === NodeEnv.Test ? new LogMailer() : new SmtpMailer(env);
+      env.NODE_ENV === NodeEnv.Test ? new MemoryMailer() : new SmtpMailer(env);
 
     bind(Mailer, () => mailer);
     registerJob(SendEmailJob);

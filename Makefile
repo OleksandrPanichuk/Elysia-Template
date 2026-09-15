@@ -1,5 +1,5 @@
 
-.PHONY: build logs migrate sh up up-db run-all add drop services down reset check generate db-generate db-migrate db-studio db-development db-shell
+.PHONY: build test test-integration test-down logs migrate sh up up-db run-all add drop services down reset check generate db-generate db-migrate db-studio db-development db-shell
 
 OPTIONAL_SERVICES := bull_board drizzle_studio
 ALL_PROFILES := $(shell echo '$(OPTIONAL_SERVICES)' | tr ' ' ',')
@@ -8,6 +8,25 @@ DB_URL ?= postgres://postgres:postgres@localhost:5432/postgres
 
 build:
 	docker compose build
+
+TEST_COMPOSE = docker compose -f docker-compose.test.yml
+
+test:
+	@$(TEST_COMPOSE) up -d --wait db_test
+	@bun run test
+
+test-integration:
+	@$(TEST_COMPOSE) --profile integration up -d --wait
+	@TEST_SESSIONS_REDIS_URL=redis://localhost:6480 \
+	 TEST_CACHE_REDIS_URL=redis://localhost:6481 \
+	 TEST_RATE_LIMIT_REDIS_URL=redis://localhost:6480 \
+	 TEST_JOBS_REDIS_URL=redis://localhost:6479 \
+	 TEST_SMTP_URL=smtp://localhost:1125 \
+	 TEST_MAILPIT_URL=http://localhost:8125 \
+	 bun run test
+
+test-down:
+	@$(TEST_COMPOSE) --profile integration down -v
 
 logs:
 	docker compose logs -f

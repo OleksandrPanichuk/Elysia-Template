@@ -15,6 +15,21 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
 
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5433:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+
     steps:
       - uses: actions/checkout@v5
 
@@ -35,4 +50,33 @@ jobs:
         run: bun run check-types
 
       - name: Test
+        run: bun run test
+
+  integration:
+    name: Integration
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.0
+
+      - name: Install
+        run: bun install --frozen-lockfile
+
+      - name: Start the services the real adapters talk to
+        run: docker compose -f docker-compose.test.yml --profile integration up -d --wait
+
+      - name: Test
+        env:
+          TEST_SESSIONS_REDIS_URL: redis://localhost:6480
+          TEST_CACHE_REDIS_URL: redis://localhost:6481
+          TEST_RATE_LIMIT_REDIS_URL: redis://localhost:6480
+          TEST_JOBS_REDIS_URL: redis://localhost:6479
+          TEST_SMTP_URL: smtp://localhost:1125
+          TEST_MAILPIT_URL: http://localhost:8125
         run: bun run test

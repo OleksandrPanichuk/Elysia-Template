@@ -35,8 +35,12 @@ export class MemoryRateLimitStore extends RateLimitStore {
     });
   }
 
-  public close(): Promise<void> {
+  public clear(): void {
     this.windows.clear();
+  }
+
+  public close(): Promise<void> {
+    this.clear();
 
     return Promise.resolve();
   }

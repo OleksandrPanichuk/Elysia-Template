@@ -230,6 +230,33 @@ booting twice leaves one schedule rather than two. Schedules do not fire under
 `NODE_ENV=test` — `MemoryJobQueue` accepts them and does nothing, so a test run
 never waits on a clock.
 
+## Tests
+
+`bun test` sets `NODE_ENV=test`, so every port resolves to its memory adapter
+and only Postgres is real. `tests/helpers/preload.ts` runs once per invocation:
+it creates and migrates the test database, boots the app, truncates every table
+after each test, and clears the mailer and rate-limit counters with it. A test
+therefore starts from empty tables and an empty inbox without arranging
+anything.
+
+Unit tests live next to what they cover; anything that goes through HTTP lives
+in `tests/`, because it crosses modules and belongs to none of them. Factories
+are named after the codebase's own verbs — `createUser`, `createOAuthUser` —
+and return a client carrying that user's session, so a test reads as the
+requests it makes rather than as setup.
+
+`docker-compose.test.yml` holds the services the suite needs, apart from the
+development stack and without volumes. `make test` starts only Postgres, since
+every other port is a memory adapter. `make test-integration` adds Redis and a
+mail server and unskips `tests/integration`, which drives the real adapters
+directly rather than through HTTP — key layout, TTLs, BullMQ's scheduler and
+the behaviour when a server disappears are invisible to a memory double. Those
+suites skip when the services are absent, so the default run stays fast.
+
+Reach for a real request over a direct call to a use case: the route, its
+guards, the rate limiter and the session cookie are part of what is being
+tested, and a test that skips them passes while the endpoint is broken.
+
 ## Caching
 
 Two layers, with different invalidation stories. Pick deliberately.
