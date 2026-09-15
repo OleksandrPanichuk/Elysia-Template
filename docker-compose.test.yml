@@ -33,3 +33,51 @@ services:
       timeout: 3s
       retries: 15
       start_period: 2s
+
+  sessions_test:
+    image: redis:7.4-alpine
+    profiles: [integration]
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
+    ports:
+      - "6480:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 2s
+      timeout: 3s
+      retries: 15
+
+  cache_test:
+    image: redis:7.4-alpine
+    profiles: [integration]
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
+    ports:
+      - "6481:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 2s
+      timeout: 3s
+      retries: 15
+
+  queue_test:
+    image: redis:7.4-alpine
+    profiles: [integration]
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
+    ports:
+      - "6479:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 2s
+      timeout: 3s
+      retries: 15
+
+  mailpit_test:
+    image: axllent/mailpit:latest
+    profiles: [integration]
+    ports:
+      - "1125:1025"
+      - "8125:8025"
+    healthcheck:
+      test: ["CMD", "/mailpit", "readyz"]
+      interval: 2s
+      timeout: 3s
+      retries: 15

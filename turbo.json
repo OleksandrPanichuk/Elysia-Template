@@ -3,28 +3,60 @@
   "ui": "tui",
   "tasks": {
     "build": {
-      "dependsOn": ["^build", "generate"],
-      "inputs": ["$TURBO_DEFAULT$", ".env*"],
-      "outputs": ["dist/**"]
+      "dependsOn": [
+        "^build",
+        "generate"
+      ],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        ".env*"
+      ],
+      "outputs": [
+        "dist/**"
+      ]
     },
     "check-types": {
-      "dependsOn": ["^check-types", "generate"]
+      "dependsOn": [
+        "^check-types",
+        "generate"
+      ]
     },
     "dev": {
       "cache": false,
-      "dependsOn": ["generate"],
+      "dependsOn": [
+        "generate"
+      ],
       "persistent": true
     },
     "generate": {
       "cache": false,
-      "env": ["DATABASE_URL", "NODE_ENV"]
+      "env": [
+        "DATABASE_URL",
+        "NODE_ENV"
+      ]
     },
     "lint": {
-      "dependsOn": ["^lint", "generate"]
+      "dependsOn": [
+        "^lint",
+        "generate"
+      ]
     },
     "test": {
-      "dependsOn": ["^build", "generate"],
-      "outputs": []
+      "dependsOn": [
+        "^build",
+        "generate"
+      ],
+      "outputs": [],
+      "env": [
+        "DATABASE_URL",
+        "NODE_ENV",
+        "TEST_SESSIONS_REDIS_URL",
+        "TEST_CACHE_REDIS_URL",
+        "TEST_RATE_LIMIT_REDIS_URL",
+        "TEST_JOBS_REDIS_URL",
+        "TEST_SMTP_URL",
+        "TEST_MAILPIT_URL"
+      ]
     }
   }
 }
