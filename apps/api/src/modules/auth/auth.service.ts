@@ -9,8 +9,6 @@ import {
 } from "@/modules/verification-tokens";
 import { JobQueueUnavailableError } from "@/platform/jobs";
 
-const SECURITY_PATH = "/settings/security";
-
 export class AuthService extends Service {
   private readonly tokensService = makeService(VerificationTokensService);
 
@@ -25,7 +23,7 @@ export class AuthService extends Service {
       ttlSeconds: env.EMAIL_VERIFICATION_TTL_SECONDS,
     });
 
-    const verificationUrl = new URL("/verify-email", env.APP_URL);
+    const verificationUrl = new URL(env.APP_VERIFY_EMAIL_PATH, env.APP_URL);
     verificationUrl.searchParams.set("token", token);
 
     await this.notificationsService.sendEmailVerification({
@@ -50,7 +48,7 @@ export class AuthService extends Service {
       email: newEmail,
     });
 
-    const confirmUrl = new URL("/confirm-email-change", env.APP_URL);
+    const confirmUrl = new URL(env.APP_CONFIRM_EMAIL_CHANGE_PATH, env.APP_URL);
     confirmUrl.searchParams.set("token", token);
 
     await this.notificationsService.sendEmailChange({
@@ -66,13 +64,15 @@ export class AuthService extends Service {
     user: UserEntity,
     previousEmail: string,
   ): Promise<void> {
+    const env = getEnv();
+
     try {
       await this.notificationsService.sendEmailChanged({
         userId: user.id,
         email: previousEmail,
         name: user.name,
         newEmail: user.email,
-        securityUrl: new URL(SECURITY_PATH, getEnv().APP_URL).toString(),
+        securityUrl: new URL(env.APP_SECURITY_PATH, env.APP_URL).toString(),
       });
     } catch (error) {
       if (!(error instanceof JobQueueUnavailableError)) throw error;
@@ -93,7 +93,7 @@ export class AuthService extends Service {
       ttlSeconds: env.PASSWORD_RESET_TTL_SECONDS,
     });
 
-    const resetUrl = new URL("/reset-password", env.APP_URL);
+    const resetUrl = new URL(env.APP_RESET_PASSWORD_PATH, env.APP_URL);
     resetUrl.searchParams.set("token", token);
 
     await this.notificationsService.sendPasswordReset({
