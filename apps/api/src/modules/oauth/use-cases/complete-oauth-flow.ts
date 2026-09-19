@@ -3,6 +3,7 @@ import { UseCase } from "@/core/use-case";
 import type { AccountType } from "@/db";
 import { transaction } from "@/db/executor";
 import { AccountsRepository } from "@/modules/accounts";
+import { AuthService } from "@/modules/auth";
 import { type CreatedSession, SessionsService } from "@/modules/sessions";
 import { UserEntity, UsersRepository, UsersService } from "@/modules/users";
 
@@ -34,6 +35,8 @@ export class CompleteOAuthFlowUseCase extends UseCase<Options, Result> {
 
   private readonly sessionsService = makeService(SessionsService);
 
+  private readonly authService = makeService(AuthService);
+
   private readonly runInTransaction = transaction;
 
   public async execute({
@@ -53,27 +56,38 @@ export class CompleteOAuthFlowUseCase extends UseCase<Options, Result> {
       redirectUri: buildCallbackUrl(provider),
     });
 
-    const userId = await this.resolveUserId(
+    const { userId, provisioned } = await this.resolveUserId(
       oauthProvider.accountType,
       identity,
     );
 
-    return this.sessionsService.create(userId, {
+    const created = await this.sessionsService.create(userId, {
       userAgent,
       ip,
     });
+
+    if (created.newDevice && !provisioned) {
+      const user = await this.usersRepository.getById(userId);
+
+      await this.authService.notifyNewSignIn(user, {
+        userAgent: userAgent ?? null,
+        ip: ip ?? null,
+      });
+    }
+
+    return created;
   }
 
   private async resolveUserId(
     accountType: AccountType,
     identity: OAuthIdentity,
-  ): Promise<string> {
+  ): Promise<{ userId: string; provisioned: boolean }> {
     const linked = await this.accountsRepository.findByProviderAccountId(
       accountType,
       identity.providerAccountId,
     );
 
-    if (linked) return linked.userId;
+    if (linked) return { userId: linked.userId, provisioned: false };
 
     const email = UserEntity.normalizeEmail(identity.email);
     const existing = await this.usersRepository.findByEmail(email);
@@ -95,10 +109,10 @@ export class CompleteOAuthFlowUseCase extends UseCase<Options, Result> {
         providerEmail: email,
       });
 
-      return existing.id;
+      return { userId: existing.id, provisioned: false };
     }
 
-    return this.runInTransaction(async () => {
+    const userId = await this.runInTransaction(async () => {
       const user = await this.usersService.create({
         name: identity.name ?? email,
         email,
@@ -117,5 +131,7 @@ export class CompleteOAuthFlowUseCase extends UseCase<Options, Result> {
 
       return user.id;
     });
+
+    return { userId, provisioned: true };
   }
 }

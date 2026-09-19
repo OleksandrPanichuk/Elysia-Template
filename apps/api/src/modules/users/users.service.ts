@@ -9,7 +9,7 @@ import {
 } from "./user.cache";
 import { UserEntity } from "./user.entity";
 import { UserNotFoundError } from "./users.errors";
-import { UsersRepository } from "./users.repository";
+import { type UpdateUserData, UsersRepository } from "./users.repository";
 
 export interface CreateUserInput {
   name: string;
@@ -48,6 +48,14 @@ export class UsersService extends Service {
     if (!user) {
       throw new UserNotFoundError(`User ${id} not found`);
     }
+
+    return user;
+  }
+
+  public async update(id: string, data: UpdateUserData): Promise<UserEntity> {
+    const user = await this.repo.update(id, data);
+
+    await this.invalidate(id);
 
     return user;
   }

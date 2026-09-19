@@ -1,4 +1,6 @@
+export { changeEmailRoute } from "./change-email.route";
 export { changePasswordRoute } from "./change-password.route";
+export { confirmEmailChangeRoute } from "./confirm-email-change.route";
 export { listConnectedAccountsRoute } from "./list-connected-accounts.route";
 export { resetPasswordRoute } from "./reset-password.route";
 export { sendEmailVerificationTokenRoute } from "./send-email-verification-token.route";

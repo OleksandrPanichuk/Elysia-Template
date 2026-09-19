@@ -88,6 +88,45 @@ describe.skipIf(!store)("RedisSessionStore against a real Redis", () => {
     ).toEqual([]);
   });
 
+  test("gives the user index a ttl that outlives every session in it", async () => {
+    const userId = crypto.randomUUID();
+    const soon = Date.now() + 60_000;
+    const later = Date.now() + 600_000;
+
+    await store!.create("h-index-1", session({ userId, expiresAt: later }));
+    await store!.create("h-index-2", session({ userId, expiresAt: soon }));
+
+    const indexTtl = await connection!.instance.pttl(
+      `velo:test:sessions:user:${userId}`,
+    );
+
+    expect(indexTtl).toBeGreaterThan(500_000);
+  });
+
+  test("extends a session and moves the key ttl with it", async () => {
+    const entry = session({ expiresAt: Date.now() + 60_000 });
+    const later = Date.now() + 600_000;
+
+    await store!.create("h-extend", entry);
+    await store!.extend("h-extend", later);
+
+    const found = await store!.findByTokenHash("h-extend");
+    const ttl = await connection!.instance.pttl("velo:test:sessions:h-extend");
+    const indexTtl = await connection!.instance.pttl(
+      `velo:test:sessions:user:${entry.userId}`,
+    );
+
+    expect(found?.expiresAt).toBe(later);
+    expect(ttl).toBeGreaterThan(500_000);
+    expect(indexTtl).toBeGreaterThan(500_000);
+  });
+
+  test("does not resurrect a session that is gone", async () => {
+    await store!.extend("h-missing", Date.now() + 600_000);
+
+    expect(await store!.findByTokenHash("h-missing")).toBeNull();
+  });
+
   test("deletes one session and leaves the rest", async () => {
     const userId = crypto.randomUUID();
 

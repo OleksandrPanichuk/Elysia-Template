@@ -3,7 +3,9 @@ import { makeUseCase } from "@/core/registry";
 
 import { authRoutes } from "./auth.routes";
 import {
+  ChangeEmailUseCase,
   ChangePasswordUseCase,
+  ConfirmEmailChangeUseCase,
   ListConnectedAccountsUseCase,
   ResetPasswordUseCase,
   SendEmailVerificationTokenUseCase,
@@ -32,5 +34,7 @@ export const authModule = defineModule({
       sendResetPasswordToken: makeUseCase(SendResetPasswordTokenUseCase),
       setPassword: makeUseCase(SetPasswordUseCase),
       changePassword: makeUseCase(ChangePasswordUseCase),
+      changeEmail: makeUseCase(ChangeEmailUseCase),
+      confirmEmailChange: makeUseCase(ConfirmEmailChangeUseCase),
     }),
 });

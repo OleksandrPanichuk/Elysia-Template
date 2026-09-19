@@ -1,3 +1,5 @@
+import { Repository } from "@/core/repository";
+
 import type { SessionEntity } from "./session.entity";
 
 export interface StoredSession extends SessionEntity {
@@ -7,7 +9,7 @@ export interface StoredSession extends SessionEntity {
 export const byNewestFirst = (a: StoredSession, b: StoredSession): number =>
   b.createdAt - a.createdAt || a.id.localeCompare(b.id);
 
-export abstract class SessionStore {
+export abstract class SessionStore extends Repository {
   public abstract create(
     tokenHash: string,
     session: SessionEntity,
@@ -18,6 +20,8 @@ export abstract class SessionStore {
   ): Promise<SessionEntity | null>;
 
   public abstract listByUserId(userId: string): Promise<StoredSession[]>;
+
+  public abstract extend(tokenHash: string, expiresAt: number): Promise<void>;
 
   public abstract deleteByTokenHash(tokenHash: string): Promise<void>;
 

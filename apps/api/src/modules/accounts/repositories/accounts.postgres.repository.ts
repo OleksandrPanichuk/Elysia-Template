@@ -71,6 +71,21 @@ export class PostgresAccountsRepository extends AccountsRepository {
       );
   }
 
+  public async updateCredentialsEmail(
+    userId: string,
+    email: string,
+  ): Promise<void> {
+    await this.db
+      .update(accountsSchema)
+      .set({ providerAccountId: UserEntity.normalizeEmail(email) })
+      .where(
+        and(
+          eq(accountsSchema.userId, userId),
+          eq(accountsSchema.type, "CREDENTIALS"),
+        ),
+      );
+  }
+
   public async insertOAuthAccount(
     data: CreateOAuthAccountData,
   ): Promise<AccountEntity> {
