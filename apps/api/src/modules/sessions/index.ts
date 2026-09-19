@@ -12,6 +12,7 @@ export {
   MAX_SESSIONS_PER_USER,
   MAX_USER_AGENT_LENGTH,
   SESSION_COOKIE_NAME,
+  SESSION_SLIDE_AFTER_MS,
   SESSION_TOKEN_PATTERN,
 } from "./sessions.constants";
 export {
@@ -21,5 +22,5 @@ export {
 export { sessionsModule } from "./sessions.module";
 export { sessionsPlugin } from "./sessions.plugin";
 export { type SessionsActions, sessionsRoutes } from "./sessions.routes";
-export { SessionsService } from "./sessions.service";
+export { SessionsService, type ValidatedSession } from "./sessions.service";
 export * from "./use-cases";

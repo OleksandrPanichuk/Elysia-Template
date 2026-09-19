@@ -48,6 +48,14 @@ export class MemorySessionStore extends SessionStore {
     return Promise.resolve(sessions.sort(byNewestFirst));
   }
 
+  public extend(tokenHash: string, expiresAt: number): Promise<void> {
+    const session = this.sessions.get(tokenHash);
+
+    if (session) this.sessions.set(tokenHash, { ...session, expiresAt });
+
+    return Promise.resolve();
+  }
+
   public deleteByTokenHash(tokenHash: string): Promise<void> {
     this.sessions.delete(tokenHash);
 
