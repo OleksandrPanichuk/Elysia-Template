@@ -6,7 +6,7 @@ import { make } from "@/core/registry";
 import type { RouteRateLimitHook } from "@/core/route";
 import { getClientIp } from "@/shared";
 
-import { RateLimitStore } from "./ports";
+import { type RateLimitHitResult, RateLimitStore } from "./ports";
 import { RateLimitExceededError } from "./rate-limit.errors";
 
 interface RateLimitContext {
@@ -27,37 +27,53 @@ const defaultKey = (context: RateLimitContext): string =>
 
 const rateLimitKey = (
   context: RateLimitContext,
-  options: RouteRateLimitHook,
+  rule: RouteRateLimitHook,
 ): string => {
-  const scope = options.scope ?? context.path;
-  const subject = options.key?.(context as never) ?? defaultKey(context);
+  const scope = rule.scope ?? context.path;
+  const subject = rule.key?.(context as never) ?? defaultKey(context);
 
   return `${scope}|${subject}`;
 };
 
+const hit = (
+  context: RateLimitContext,
+  rule: RouteRateLimitHook,
+): Promise<RateLimitHitResult> =>
+  make(RateLimitStore).hit({
+    key: rateLimitKey(context, rule),
+    limit: rule.limit,
+    windowMs: rule.windowMs,
+  });
+
+const tightest = (results: RateLimitHitResult[]): RateLimitHitResult =>
+  results.reduce((closest, result) =>
+    result.remaining < closest.remaining ? result : closest,
+  );
+
+const secondsUntil = (at: number): number =>
+  Math.max(1, Math.ceil((at - Date.now()) / 1000));
+
 export const rateLimitPlugin = new Elysia({ name: "rate-limit" })
   .macro({
-    rateLimit: (options: RouteRateLimitHook) => ({
+    rateLimit: (rules: RouteRateLimitHook[]) => ({
       beforeHandle: async (raw: unknown) => {
         const context = raw as RateLimitContext;
 
-        const result = await make(RateLimitStore).hit({
-          key: rateLimitKey(context, options),
-          limit: options.limit,
-          windowMs: options.windowMs,
-        });
-
-        context.set.headers["ratelimit-limit"] = result.limit;
-        context.set.headers["ratelimit-remaining"] = result.remaining;
-        context.set.headers["ratelimit-reset"] = Math.ceil(
-          (result.resetAt - Date.now()) / 1000,
+        const results = await Promise.all(
+          rules.map((rule) => hit(context, rule)),
         );
+        const closest = tightest(results);
 
-        if (result.allowed) return;
+        context.set.headers["ratelimit-limit"] = closest.limit;
+        context.set.headers["ratelimit-remaining"] = closest.remaining;
+        context.set.headers["ratelimit-reset"] = secondsUntil(closest.resetAt);
 
-        context.set.headers["retry-after"] = Math.max(
-          1,
-          Math.ceil((result.resetAt - Date.now()) / 1000),
+        const blocked = results.filter((result) => !result.allowed);
+
+        if (blocked.length === 0) return;
+
+        context.set.headers["retry-after"] = secondsUntil(
+          Math.max(...blocked.map((result) => result.resetAt)),
         );
 
         throw new RateLimitExceededError("Too many requests. Try again later.");
