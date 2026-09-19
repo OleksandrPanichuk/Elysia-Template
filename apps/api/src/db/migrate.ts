@@ -23,7 +23,7 @@ if (!hasMigrations) {
   process.exit(1);
 }
 
-const db = createDatabase(DATABASE_URL);
+const db = createDatabase({ url: DATABASE_URL });
 
 try {
   await migrate(db, { migrationsFolder });
