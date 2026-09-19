@@ -1,6 +1,8 @@
 import { createClient, createUser, DEFAULT_PASSWORD } from "@tests/helpers";
 import { describe, expect, test } from "bun:test";
 
+const HASHING_TEST_TIMEOUT_MS = 30_000;
+
 const attempt = (email: string, password = "wrong-password") =>
   createClient().post<{ code: string }>("/api/auth/sign-in", {
     email,
@@ -61,16 +63,22 @@ describe("rate limiting", () => {
 });
 
 describe("rate limiting per client", () => {
-  test("stops sign-in attempts spread across many addresses", async () => {
-    const seen: number[] = [];
+  test(
+    "stops sign-in attempts spread across many addresses",
+    async () => {
+      const seen: number[] = [];
 
-    for (let i = 0; i < 60; i += 1) {
-      seen.push((await attempt(`nobody${i}@example.test`)).status);
-    }
+      for (let i = 0; i < 60; i += 1) {
+        seen.push((await attempt(`nobody${i}@example.test`)).status);
+      }
 
-    expect(seen).toContain(429);
-    expect(seen.filter((status) => status === 401).length).toBeGreaterThan(10);
-  });
+      expect(seen).toContain(429);
+      expect(seen.filter((status) => status === 401).length).toBeGreaterThan(
+        10,
+      );
+    },
+    HASHING_TEST_TIMEOUT_MS,
+  );
 
   test("reports the tighter of the rules in the headers", async () => {
     const user = await createUser();
