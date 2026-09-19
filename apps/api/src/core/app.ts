@@ -4,6 +4,7 @@ import { Elysia } from "elysia";
 
 import { modules as defaultModules } from "@/app.modules";
 import { getCorsConfig } from "@/configs/cors.config";
+import { MAX_REQUEST_BODY_BYTES } from "@/constants";
 import type { RoutedApp } from "@/core/app.routes";
 import type { AppModule } from "@/core/module";
 import { getSessionCookieName } from "@/modules/sessions";
@@ -12,7 +13,11 @@ import { csrfPlugin, envPlugin, errorPlugin, loggerPlugin } from "@/plugins";
 export const createApp = (modules: readonly AppModule[] = defaultModules) => {
   modules.forEach((module) => module.register());
 
-  const base = new Elysia({ name: "api", prefix: "/api" })
+  const base = new Elysia({
+    name: "api",
+    prefix: "/api",
+    serve: { maxRequestBodySize: MAX_REQUEST_BODY_BYTES },
+  })
     .use(loggerPlugin)
     .use(errorPlugin)
     .use(envPlugin)
