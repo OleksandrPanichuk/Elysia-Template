@@ -20,6 +20,20 @@ describe("sign up", () => {
     expect(inbox.tokenFor("kate@example.test")).toMatch(/^[a-f0-9]{64}$/);
   });
 
+  test("refuses a taken address at once, with a code that says so", async () => {
+    await createUser({ email: "kate@example.test" });
+    const startedAt = Date.now();
+
+    const response = await createGuest().post<{ code: string }>(
+      "/api/auth/sign-up",
+      { email: "Kate@Example.test", password: "another-password-1", name: "K" },
+    );
+
+    expect(response.status).toBe(409);
+    expect(response.body.code).toBe("USER_ALREADY_EXISTS");
+    expect(Date.now() - startedAt).toBeLessThan(1_000);
+  });
+
   test("leaves the database empty between tests", async () => {
     const guest = createGuest();
     const me = await guest.get("/api/users/me");

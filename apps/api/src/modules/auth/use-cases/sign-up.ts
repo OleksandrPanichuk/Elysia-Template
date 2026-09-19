@@ -25,8 +25,6 @@ type Options = SignUpUseCaseOptions;
 type Result = CreatedSession;
 
 export class SignUpUseCase extends UseCase<Options, Result> {
-  private readonly SLEEP_DURATION_MS = 2000;
-
   private readonly usersService = makeService(UsersService);
 
   private readonly accountsService = makeService(AccountsService);
@@ -52,8 +50,9 @@ export class SignUpUseCase extends UseCase<Options, Result> {
       await this.usersRepository.findByEmail(normalizedEmail);
 
     if (existingUser) {
-      await this.sleep(this.SLEEP_DURATION_MS);
-      throw new UserAlreadyExistsError("Could not create new account");
+      throw new UserAlreadyExistsError(
+        "An account with this email already exists",
+      );
     }
 
     const user = await this.runInTransaction(async () => {
@@ -90,9 +89,5 @@ export class SignUpUseCase extends UseCase<Options, Result> {
         "verification email was not queued",
       );
     }
-  }
-
-  private async sleep(ms: number): Promise<void> {
-    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 }
