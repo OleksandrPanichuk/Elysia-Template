@@ -7,14 +7,20 @@ import {
   type RateLimitHitResult,
   RateLimitStore,
 } from "@/platform/rate-limit/ports/rate-limit-store";
-import { RATE_LIMIT_KEY_PREFIX } from "@/platform/rate-limit/rate-limit.constants";
+import {
+  RATE_LIMIT_KEY_PREFIX,
+  RATE_LIMIT_STORE_TIMEOUT_MS,
+} from "@/platform/rate-limit/rate-limit.constants";
 
 type NazliStore = ReturnType<typeof redisStore>;
 
 export class NazliRateLimitStore extends RateLimitStore {
   private store: NazliStore | undefined;
 
-  constructor(private readonly connection: RedisConnection) {
+  constructor(
+    private readonly connection: RedisConnection,
+    private readonly timeoutMs = RATE_LIMIT_STORE_TIMEOUT_MS,
+  ) {
     super();
   }
 
@@ -26,13 +32,15 @@ export class NazliRateLimitStore extends RateLimitStore {
     const now = Date.now();
 
     try {
-      const result = await this.resolve().hit({
-        key,
-        limit,
-        window: windowMs,
-        cost: 1,
-        now,
-      });
+      const result = await this.withinTimeout(
+        this.resolve().hit({
+          key,
+          limit,
+          window: windowMs,
+          cost: 1,
+          now,
+        }),
+      );
 
       return {
         allowed: !result.blocked,
@@ -49,6 +57,24 @@ export class NazliRateLimitStore extends RateLimitStore {
         limit,
         resetAt: now + windowMs,
       };
+    }
+  }
+
+  private async withinTimeout<T>(operation: T | Promise<T>): Promise<T> {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+
+    const timeout = new Promise<never>((_, reject) => {
+      timer = setTimeout(() => {
+        reject(
+          new Error(`Rate limit store timed out after ${this.timeoutMs}ms`),
+        );
+      }, this.timeoutMs);
+    });
+
+    try {
+      return await Promise.race([operation, timeout]);
+    } finally {
+      clearTimeout(timer);
     }
   }
 
