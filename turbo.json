@@ -55,7 +55,11 @@
         "TEST_RATE_LIMIT_REDIS_URL",
         "TEST_JOBS_REDIS_URL",
         "TEST_SMTP_URL",
-        "TEST_MAILPIT_URL"
+        "TEST_MAILPIT_URL",
+        "TEST_S3_ENDPOINT",
+        "TEST_S3_BUCKET",
+        "TEST_S3_ACCESS_KEY_ID",
+        "TEST_S3_SECRET_ACCESS_KEY"
       ]
     }
   }

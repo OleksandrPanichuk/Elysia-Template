@@ -16,6 +16,9 @@ const mailer = url
         SESSIONS_REDIS_URL: "redis://127.0.0.1:6379",
         JOBS_REDIS_URL: "redis://127.0.0.1:6379",
         CACHE_REDIS_URL: "redis://127.0.0.1:6379",
+        STORAGE_S3_BUCKET: "unused",
+        STORAGE_S3_ACCESS_KEY_ID: "unused",
+        STORAGE_S3_SECRET_ACCESS_KEY: "unused",
       }),
     )
   : undefined;

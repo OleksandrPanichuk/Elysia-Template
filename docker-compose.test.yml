@@ -81,3 +81,23 @@ services:
       interval: 2s
       timeout: 3s
       retries: 15
+
+  storage_test:
+    image: minio/minio:latest
+    profiles: [integration]
+    entrypoint:
+      - sh
+      - -c
+      - mkdir -p /data/velo-test && exec minio server /data
+    environment:
+      - MINIO_ROOT_USER=minioadmin
+      - MINIO_ROOT_PASSWORD=minioadmin
+    tmpfs:
+      - /data
+    ports:
+      - "9100:9000"
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 2s
+      timeout: 3s
+      retries: 15

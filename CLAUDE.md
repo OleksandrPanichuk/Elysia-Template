@@ -96,6 +96,7 @@ adapters/mail/       smtp.mailer.ts        log.mailer.ts
 adapters/sessions/   redis.session-store.ts
 adapters/jobs/       bullmq.job-queue.ts   memory.job-queue.ts
 adapters/cache/      redis.cache.ts        memory.cache.ts
+adapters/storage/    s3.storage.ts         memory.storage.ts
 ```
 
 Siblings in one folder are the alternatives you pick between in `register()`,

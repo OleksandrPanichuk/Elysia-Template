@@ -79,6 +79,13 @@ export const EnvSchema = z.object({
     .min(60)
     .max(60 * 60 * 24)
     .default(60 * 60),
+  STORAGE_S3_BUCKET: z.string().trim().min(1).optional(),
+  STORAGE_S3_REGION: z.string().trim().min(1).default("us-east-1"),
+  STORAGE_S3_ACCESS_KEY_ID: z.string().min(1).optional(),
+  STORAGE_S3_SECRET_ACCESS_KEY: z.string().min(1).optional(),
+  STORAGE_S3_ENDPOINT: z.url({ protocol: /^https?$/ }).optional(),
+  STORAGE_S3_FORCE_PATH_STYLE: z.stringbool().optional(),
+
   MAIL_FROM_NAME: z.string().trim().min(1).default("Unknown Sender"),
   MAIL_FROM_ADDRESS: z.email().default("no-reply@example.com"),
   SMTP_URL: z.url({ protocol: /^smtp$/ }).optional(),
@@ -134,6 +141,9 @@ const CheckedEnvSchema = EnvSchema.superRefine(
     "SMTP_URL",
     "JOBS_REDIS_URL",
     "CACHE_REDIS_URL",
+    "STORAGE_S3_BUCKET",
+    "STORAGE_S3_ACCESS_KEY_ID",
+    "STORAGE_S3_SECRET_ACCESS_KEY",
   ),
 );
 

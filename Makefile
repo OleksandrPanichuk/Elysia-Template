@@ -23,6 +23,10 @@ test-integration:
 	 TEST_JOBS_REDIS_URL=redis://localhost:6479 \
 	 TEST_SMTP_URL=smtp://localhost:1125 \
 	 TEST_MAILPIT_URL=http://localhost:8125 \
+	 TEST_S3_ENDPOINT=http://localhost:9100 \
+	 TEST_S3_BUCKET=velo-test \
+	 TEST_S3_ACCESS_KEY_ID=minioadmin \
+	 TEST_S3_SECRET_ACCESS_KEY=minioadmin \
 	 bun run test
 
 test-down:
