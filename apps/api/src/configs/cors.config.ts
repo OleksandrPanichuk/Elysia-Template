@@ -7,6 +7,13 @@ export const getCorsConfig = (): CORSConfig => {
 
   return {
     allowedHeaders: ["Content-Type", "Authorization"],
+    exposeHeaders: [
+      "x-request-id",
+      "ratelimit-limit",
+      "ratelimit-remaining",
+      "ratelimit-reset",
+      "retry-after",
+    ],
     origin: env.CORS_ORIGIN,
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
