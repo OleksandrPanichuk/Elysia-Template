@@ -1,4 +1,6 @@
+export { ChangeEmailInput } from "./change-email.dto";
 export { ChangePasswordInput } from "./change-password.dto";
+export { ConfirmEmailChangeInput } from "./confirm-email-change.dto";
 export { ResetPasswordInput } from "./reset-password.dto";
 export { SendEmailVerificationTokenInput } from "./send-email-verification-token.dto";
 export { SendResetPasswordTokenInput } from "./send-reset-password-token.dto";

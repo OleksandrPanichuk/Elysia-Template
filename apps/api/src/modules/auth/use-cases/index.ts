@@ -1,7 +1,15 @@
 export {
+  ChangeEmailUseCase,
+  type ChangeEmailUseCaseOptions,
+} from "./change-email";
+export {
   ChangePasswordUseCase,
   type ChangePasswordUseCaseOptions,
 } from "./change-password";
+export {
+  ConfirmEmailChangeUseCase,
+  type ConfirmEmailChangeUseCaseOptions,
+} from "./confirm-email-change";
 export {
   ListConnectedAccountsUseCase,
   type ListConnectedAccountsUseCaseOptions,

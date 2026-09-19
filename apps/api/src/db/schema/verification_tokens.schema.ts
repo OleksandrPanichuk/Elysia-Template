@@ -12,6 +12,7 @@ import { usersSchema } from "./users.schema";
 export const verificationTokenTypeEnum = pgEnum("verification_token_type", [
   "email_verification",
   "password_reset",
+  "email_change",
 ]);
 
 export const verificationTokensSchema = pgTable(
@@ -23,6 +24,7 @@ export const verificationTokensSchema = pgTable(
       .references(() => usersSchema.id, { onDelete: "cascade" }),
     tokenHash: text("token_hash").notNull().unique(),
     type: verificationTokenTypeEnum("type").notNull(),
+    email: text("email"),
     expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
     consumedAt: timestamp("consumed_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true })
