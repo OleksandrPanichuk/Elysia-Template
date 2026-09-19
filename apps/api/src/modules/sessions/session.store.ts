@@ -21,6 +21,8 @@ export abstract class SessionStore extends Repository {
 
   public abstract listByUserId(userId: string): Promise<StoredSession[]>;
 
+  public abstract extend(tokenHash: string, expiresAt: number): Promise<void>;
+
   public abstract deleteByTokenHash(tokenHash: string): Promise<void>;
 
   public abstract deleteByUserId(userId: string): Promise<void>;
