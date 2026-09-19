@@ -56,7 +56,6 @@ jobs:
     name: Integration
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    if: github.ref == 'refs/heads/main'
 
     steps:
       - uses: actions/checkout@v5
