@@ -1,10 +1,7 @@
 import { getEnv } from "@/configs";
 import { makeService } from "@/core/registry";
 import { Service } from "@/core/service";
-import {
-  MailDeliveryError,
-  NotificationsService,
-} from "@/modules/notifications";
+import { NotificationsService } from "@/modules/notifications";
 import type { UserEntity } from "@/modules/users";
 import {
   VerificationTokenKind,
@@ -28,17 +25,13 @@ export class AuthService extends Service {
     const verificationUrl = new URL("/verify-email", env.APP_URL);
     verificationUrl.searchParams.set("token", token);
 
-    await this.deliver(VerificationTokenKind.EmailVerification, user.id, () =>
-      this.notificationsService.sendEmailVerification({
-        userId: user.id,
-        email: user.email,
-        name: user.name,
-        verificationUrl: verificationUrl.toString(),
-        expiresInHours: Math.ceil(
-          env.EMAIL_VERIFICATION_TTL_SECONDS / (60 * 60),
-        ),
-      }),
-    );
+    await this.notificationsService.sendEmailVerification({
+      userId: user.id,
+      email: user.email,
+      name: user.name,
+      verificationUrl: verificationUrl.toString(),
+      expiresInHours: Math.ceil(env.EMAIL_VERIFICATION_TTL_SECONDS / (60 * 60)),
+    });
   }
 
   public async sendPasswordReset(user: UserEntity): Promise<void> {
@@ -53,28 +46,12 @@ export class AuthService extends Service {
     const resetUrl = new URL("/reset-password", env.APP_URL);
     resetUrl.searchParams.set("token", token);
 
-    await this.deliver(VerificationTokenKind.PasswordReset, user.id, () =>
-      this.notificationsService.sendPasswordReset({
-        userId: user.id,
-        email: user.email,
-        name: user.name,
-        resetUrl: resetUrl.toString(),
-        expiresInMinutes: Math.ceil(env.PASSWORD_RESET_TTL_SECONDS / 60),
-      }),
-    );
-  }
-
-  private async deliver(
-    notification: VerificationTokenKind,
-    userId: string,
-    send: () => Promise<void>,
-  ): Promise<void> {
-    try {
-      await send();
-    } catch (error) {
-      if (!(error instanceof MailDeliveryError)) throw error;
-
-      this.logger.error({ userId, notification }, "email was not delivered");
-    }
+    await this.notificationsService.sendPasswordReset({
+      userId: user.id,
+      email: user.email,
+      name: user.name,
+      resetUrl: resetUrl.toString(),
+      expiresInMinutes: Math.ceil(env.PASSWORD_RESET_TTL_SECONDS / 60),
+    });
   }
 }
