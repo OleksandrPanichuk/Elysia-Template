@@ -27,8 +27,8 @@ describe("updating the profile", () => {
       name: "   ",
     });
 
-    expect(response.status).toBe(400);
-    expect(response.body.code).toBe("BAD_REQUEST");
+    expect(response.status).toBe(422);
+    expect(response.body.code).toBe("VALIDATION");
   });
 
   test("cannot be reached without signing in", async () => {

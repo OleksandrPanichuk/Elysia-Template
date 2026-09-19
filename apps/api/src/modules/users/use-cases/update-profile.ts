@@ -1,4 +1,3 @@
-import { BadRequestError } from "@/core/errors";
 import { makeService } from "@/core/registry";
 import { UseCase } from "@/core/use-case";
 
@@ -16,13 +15,7 @@ type Result = UserEntity;
 export class UpdateProfileUseCase extends UseCase<Options, Result> {
   private readonly usersService = makeService(UsersService);
 
-  public async execute({ userId, name }: Options): Promise<Result> {
-    const trimmed = name.trim();
-
-    if (trimmed.length === 0) {
-      throw new BadRequestError("Name cannot be blank");
-    }
-
-    return this.usersService.update(userId, { name: trimmed });
+  public execute({ userId, name }: Options): Promise<Result> {
+    return this.usersService.update(userId, { name });
   }
 }
