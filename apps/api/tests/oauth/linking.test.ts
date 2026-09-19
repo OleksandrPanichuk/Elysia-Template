@@ -3,6 +3,7 @@ import {
   createGuest,
   createOAuthUser,
   createUser,
+  createVerifiedUser,
   useOAuthIdentity,
 } from "@tests/helpers";
 import { describe, expect, test } from "bun:test";
@@ -57,8 +58,8 @@ describe("signing in with a provider", () => {
 });
 
 describe("an existing account holds the email", () => {
-  test("links when the provider is authoritative for it", async () => {
-    const user = await createUser({ email: "same@example.test" });
+  test("links when the provider is authoritative and the email is verified", async () => {
+    const user = await createVerifiedUser({ email: "same@example.test" });
 
     useOAuthIdentity(Google, {
       email: "same@example.test",
@@ -80,8 +81,27 @@ describe("an existing account holds the email", () => {
     ]);
   });
 
+  test("refuses when the existing account never verified the email", async () => {
+    const squatter = await createUser({ email: "victim@example.test" });
+
+    useOAuthIdentity(Google, {
+      email: "victim@example.test",
+      emailIsAuthoritative: true,
+    });
+
+    const victim = createGuest();
+    const { location } = await completeOAuth(victim, Google);
+
+    expect(location).toContain("error=ACCOUNT_LINK_REQUIRED");
+    expect((await victim.get("/api/users/me")).status).toBe(401);
+
+    const accounts =
+      await squatter.get<Array<{ type: string }>>("/api/auth/accounts");
+    expect(accounts.body.map((a) => a.type)).toEqual(["CREDENTIALS"]);
+  });
+
   test("refuses when the provider is not authoritative", async () => {
-    await createUser({ email: "victim@corp.example" });
+    await createVerifiedUser({ email: "victim@corp.example" });
 
     useOAuthIdentity(Google, {
       email: "victim@corp.example",
