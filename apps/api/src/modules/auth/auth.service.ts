@@ -10,8 +10,6 @@ import {
 import { JobQueueUnavailableError } from "@/platform/jobs";
 import type { ClientInfo } from "@/shared";
 
-const SECURITY_PATH = "/settings/security";
-
 export class AuthService extends Service {
   private readonly tokensService = makeService(VerificationTokensService);
 
@@ -26,7 +24,7 @@ export class AuthService extends Service {
       ttlSeconds: env.EMAIL_VERIFICATION_TTL_SECONDS,
     });
 
-    const verificationUrl = new URL("/verify-email", env.APP_URL);
+    const verificationUrl = new URL(env.APP_VERIFY_EMAIL_PATH, env.APP_URL);
     verificationUrl.searchParams.set("token", token);
 
     await this.notificationsService.sendEmailVerification({
@@ -34,6 +32,31 @@ export class AuthService extends Service {
       email: user.email,
       name: user.name,
       verificationUrl: verificationUrl.toString(),
+      expiresInHours: Math.ceil(env.EMAIL_VERIFICATION_TTL_SECONDS / (60 * 60)),
+    });
+  }
+
+  public async sendEmailChangeConfirmation(
+    user: UserEntity,
+    newEmail: string,
+  ): Promise<void> {
+    const env = getEnv();
+
+    const { token } = await this.tokensService.issue({
+      userId: user.id,
+      type: VerificationTokenKind.EmailChange,
+      ttlSeconds: env.EMAIL_VERIFICATION_TTL_SECONDS,
+      email: newEmail,
+    });
+
+    const confirmUrl = new URL(env.APP_CONFIRM_EMAIL_CHANGE_PATH, env.APP_URL);
+    confirmUrl.searchParams.set("token", token);
+
+    await this.notificationsService.sendEmailChange({
+      userId: user.id,
+      email: newEmail,
+      name: user.name,
+      confirmUrl: confirmUrl.toString(),
       expiresInHours: Math.ceil(env.EMAIL_VERIFICATION_TTL_SECONDS / (60 * 60)),
     });
   }
@@ -57,6 +80,27 @@ export class AuthService extends Service {
     );
   }
 
+  public notifyEmailChanged(
+    user: UserEntity,
+    previousEmail: string,
+  ): Promise<void> {
+    return this.notify("email changed", user, () =>
+      this.notificationsService.sendEmailChanged({
+        userId: user.id,
+        email: previousEmail,
+        name: user.name,
+        newEmail: user.email,
+        securityUrl: this.securityUrl(),
+      }),
+    );
+  }
+
+  private securityUrl(): string {
+    const env = getEnv();
+
+    return new URL(env.APP_SECURITY_PATH, env.APP_URL).toString();
+  }
+
   private securityNotice(user: UserEntity, client: ClientInfo) {
     return {
       userId: user.id,
@@ -64,7 +108,7 @@ export class AuthService extends Service {
       name: user.name,
       occurredAt: new Date(),
       client,
-      securityUrl: new URL(SECURITY_PATH, getEnv().APP_URL).toString(),
+      securityUrl: this.securityUrl(),
     };
   }
 
@@ -94,7 +138,7 @@ export class AuthService extends Service {
       ttlSeconds: env.PASSWORD_RESET_TTL_SECONDS,
     });
 
-    const resetUrl = new URL("/reset-password", env.APP_URL);
+    const resetUrl = new URL(env.APP_RESET_PASSWORD_PATH, env.APP_URL);
     resetUrl.searchParams.set("token", token);
 
     await this.notificationsService.sendPasswordReset({

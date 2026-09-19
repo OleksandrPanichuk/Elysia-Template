@@ -5,7 +5,7 @@ import { type DBExecutor, getExecutor } from "@/db/executor";
 
 import { UserEntity } from "../user.entity";
 import { UserNotFoundError } from "../users.errors";
-import type { CreateUserData } from "../users.repository";
+import type { CreateUserData, UpdateUserData } from "../users.repository";
 import { UsersRepository } from "../users.repository";
 
 export class PostgresUsersRepository extends UsersRepository {
@@ -27,6 +27,20 @@ export class PostgresUsersRepository extends UsersRepository {
       .returning();
 
     return user!;
+  }
+
+  public async update(id: string, data: UpdateUserData): Promise<UserEntity> {
+    const [user] = await this.db
+      .update(usersSchema)
+      .set(data)
+      .where(eq(usersSchema.id, id))
+      .returning();
+
+    if (!user) {
+      throw new UserNotFoundError(`User ${id} not found`);
+    }
+
+    return user;
   }
 
   public list(): Promise<UserEntity[]> {
@@ -67,6 +81,20 @@ export class PostgresUsersRepository extends UsersRepository {
     await this.db
       .update(usersSchema)
       .set({ emailVerifiedAt: verifiedAt })
+      .where(eq(usersSchema.id, id));
+  }
+
+  public async updateEmail(
+    id: string,
+    email: string,
+    verifiedAt: Date,
+  ): Promise<void> {
+    await this.db
+      .update(usersSchema)
+      .set({
+        email: UserEntity.normalizeEmail(email),
+        emailVerifiedAt: verifiedAt,
+      })
       .where(eq(usersSchema.id, id));
   }
 

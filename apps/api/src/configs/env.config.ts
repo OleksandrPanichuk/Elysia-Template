@@ -8,6 +8,13 @@ export enum NodeEnv {
   Test = "test",
 }
 
+const appPath = (fallback: string) =>
+  z
+    .string()
+    .trim()
+    .regex(/^\/[^\s?#]*$/, "Use an absolute path such as /verify-email")
+    .default(fallback);
+
 export const EnvSchema = z.object({
   NODE_ENV: z.enum(NodeEnv).default(NodeEnv.Development),
   PORT: z.coerce.number().int().positive().min(0).max(65535).default(8080),
@@ -56,6 +63,10 @@ export const EnvSchema = z.object({
       (value) => new URL(value).origin === value,
       "Use an exact origin without a path or trailing slash",
     ),
+  APP_VERIFY_EMAIL_PATH: appPath("/verify-email"),
+  APP_RESET_PASSWORD_PATH: appPath("/reset-password"),
+  APP_CONFIRM_EMAIL_CHANGE_PATH: appPath("/confirm-email-change"),
+  APP_SECURITY_PATH: appPath("/settings/security"),
   EMAIL_VERIFICATION_TTL_SECONDS: z.coerce
     .number()
     .int()

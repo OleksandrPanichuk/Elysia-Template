@@ -47,10 +47,8 @@ export class RedisSessionStore extends SessionStore {
 
       if (result !== "OK") return false;
 
-      const indexKey = this.userKey(session.userId);
-
-      await client.sadd(indexKey, tokenHash);
-      await client.pexpireat(indexKey, session.expiresAt, "GT");
+      await client.sadd(this.userKey(session.userId), tokenHash);
+      await this.extendIndex(client, session.userId, session.expiresAt);
 
       return true;
     });
@@ -107,6 +105,42 @@ export class RedisSessionStore extends SessionStore {
       }
       return sessions.sort(byNewestFirst);
     });
+  }
+
+  public extend(tokenHash: string, expiresAt: number): Promise<void> {
+    return this.execute(async (client) => {
+      const value = await client.get(this.key(tokenHash));
+
+      if (value === null) return;
+
+      const session = this.tryDecode(value, tokenHash);
+
+      if (!session) return;
+
+      await client.set(
+        this.key(tokenHash),
+        JSON.stringify({ ...session, expiresAt }),
+        "PXAT",
+        expiresAt,
+        "XX",
+      );
+      await this.extendIndex(client, session.userId, expiresAt);
+    });
+  }
+
+  private async extendIndex(
+    client: Redis,
+    userId: string,
+    expiresAt: number,
+  ): Promise<void> {
+    const indexKey = this.userKey(userId);
+    const hasExpiry = (await client.pttl(indexKey)) >= 0;
+
+    if (hasExpiry) {
+      await client.pexpireat(indexKey, expiresAt, "GT");
+    } else {
+      await client.pexpireat(indexKey, expiresAt);
+    }
   }
 
   public deleteByTokenHash(tokenHash: string): Promise<void> {

@@ -3,6 +3,8 @@ export const EmailKind = {
   PasswordReset: "password_reset",
   PasswordChanged: "password_changed",
   NewSignIn: "new_sign_in",
+  EmailChange: "email_change",
+  EmailChanged: "email_changed",
 } as const;
 
 export type EmailKind = (typeof EmailKind)[keyof typeof EmailKind];

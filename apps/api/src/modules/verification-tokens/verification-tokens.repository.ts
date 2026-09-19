@@ -7,6 +7,7 @@ export interface CreateVerificationTokenData {
   userId: string;
   tokenHash: string;
   type: VerificationTokenType;
+  email?: string | null;
   expiresAt: Date;
 }
 

@@ -10,6 +10,8 @@ import {
 import { Mailer } from "../../ports";
 import {
   type RenderedEmail,
+  renderEmailChangedEmail,
+  renderEmailChangeEmail,
   renderEmailVerificationEmail,
   renderNewSignInEmail,
   renderPasswordChangedEmail,
@@ -64,6 +66,20 @@ export class SendEmailJob extends Job<SendEmailPayload> {
           occurredAt: payload.occurredAt,
           userAgent: payload.client.userAgent,
           ip: payload.client.ip,
+          actionUrl: payload.securityUrl,
+        });
+
+      case EmailKind.EmailChange:
+        return renderEmailChangeEmail({
+          name: payload.to.name,
+          actionUrl: payload.confirmUrl,
+          noteText: `This link will expire in ${payload.expiresInHours} hours.`,
+        });
+
+      case EmailKind.EmailChanged:
+        return renderEmailChangedEmail({
+          name: payload.to.name,
+          newEmail: payload.newEmail,
           actionUrl: payload.securityUrl,
         });
     }
