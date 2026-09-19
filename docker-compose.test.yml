@@ -10,7 +10,7 @@ name: velo-test
 
 services:
   db_test:
-    image: postgres:17-alpine
+    image: postgres:18-alpine
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
@@ -24,7 +24,7 @@ services:
       - -c
       - synchronous_commit=off
     tmpfs:
-      - /var/lib/postgresql/data
+      - /var/lib/postgresql
     ports:
       - "5433:5432"
     healthcheck:
