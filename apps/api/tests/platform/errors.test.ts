@@ -32,6 +32,25 @@ describe("error responses", () => {
     expect(body.code).toBe("BAD_REQUEST");
   });
 
+  test("rejects input past its length limit before doing any work", async () => {
+    const longName = await createGuest().post<{ code: string }>(
+      "/api/auth/sign-up",
+      {
+        email: "kate@example.test",
+        password: "test-password-123",
+        name: "k".repeat(101),
+      },
+    );
+    const longPassword = await createGuest().post<{ code: string }>(
+      "/api/auth/sign-in",
+      { email: "kate@example.test", password: "p".repeat(129) },
+    );
+
+    expect(longName.status).toBe(422);
+    expect(longName.body.code).toBe("VALIDATION");
+    expect(longPassword.status).toBe(422);
+  });
+
   test("answers an unknown path with a plain 404", async () => {
     const response = await createGuest().get<{ code: string }>("/api/nowhere");
 
