@@ -9,6 +9,7 @@ import {
   UsersRepository,
   UsersService,
 } from "@/modules/users";
+import { JobQueueUnavailableError } from "@/platform/jobs";
 
 import { AuthService } from "../auth.service";
 
@@ -70,12 +71,25 @@ export class SignUpUseCase extends UseCase<Options, Result> {
       return createdUser;
     });
 
-    await this.authService.sendEmailVerification(user);
+    await this.sendVerificationEmail(user);
 
     return this.sessionsService.create(user.id, {
       userAgent,
       ip,
     });
+  }
+
+  private async sendVerificationEmail(user: UserEntity): Promise<void> {
+    try {
+      await this.authService.sendEmailVerification(user);
+    } catch (error) {
+      if (!(error instanceof JobQueueUnavailableError)) throw error;
+
+      this.logger.error(
+        { userId: user.id, err: error },
+        "verification email was not queued",
+      );
+    }
   }
 
   private async sleep(ms: number): Promise<void> {
