@@ -1,5 +1,7 @@
 export {
+  MAIL_CLIENT_RATE_LIMIT,
   MAIL_RATE_LIMIT,
+  SIGN_IN_CLIENT_RATE_LIMIT,
   SIGN_IN_RATE_LIMIT,
   SIGN_UP_RATE_LIMIT,
 } from "./auth.constants";

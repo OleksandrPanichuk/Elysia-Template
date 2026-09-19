@@ -59,3 +59,37 @@ describe("rate limiting", () => {
     expect(spoofed.status).toBe(429);
   });
 });
+
+describe("rate limiting per client", () => {
+  test("stops sign-in attempts spread across many addresses", async () => {
+    const seen: number[] = [];
+
+    for (let i = 0; i < 60; i += 1) {
+      seen.push((await attempt(`nobody${i}@example.test`)).status);
+    }
+
+    expect(seen).toContain(429);
+    expect(seen.filter((status) => status === 401).length).toBeGreaterThan(10);
+  });
+
+  test("reports the tighter of the rules in the headers", async () => {
+    const user = await createUser();
+    const first = await attempt(user.email);
+
+    expect(first.headers.get("ratelimit-limit")).toBe("10");
+    expect(first.headers.get("ratelimit-remaining")).toBe("9");
+  });
+
+  test("caps password reset emails across addresses", async () => {
+    const request = (email: string) =>
+      createClient().post("/api/auth/send-reset-password-token", { email });
+    const seen: number[] = [];
+
+    for (let i = 0; i < 12; i += 1) {
+      seen.push((await request(`ghost${i}@example.test`)).status);
+    }
+
+    expect(seen.slice(0, 10)).toEqual(Array<number>(10).fill(200));
+    expect(seen.slice(10)).toEqual([429, 429]);
+  });
+});
