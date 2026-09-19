@@ -3,6 +3,7 @@ import { openapi } from "@elysiajs/openapi";
 import { Elysia } from "elysia";
 
 import { modules as defaultModules } from "@/app.modules";
+import { getEnv, NodeEnv } from "@/configs";
 import { getCorsConfig } from "@/configs/cors.config";
 import { MAX_REQUEST_BODY_BYTES } from "@/constants";
 import type { RoutedApp } from "@/core/app.routes";
@@ -31,6 +32,7 @@ export const createApp = (modules: readonly AppModule[] = defaultModules) => {
 
   const withOpenApi = withPlugins.use(
     openapi({
+      enabled: getEnv().NODE_ENV !== NodeEnv.Production,
       documentation: {
         info: { title: "API", version: "0.1.0" },
         components: {
