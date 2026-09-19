@@ -1,3 +1,4 @@
+import { Repository } from "@/core/repository";
 import type { VerificationTokenType } from "@/db";
 
 import type { VerificationTokenEntity } from "./verification-token.entity";
@@ -9,7 +10,7 @@ export interface CreateVerificationTokenData {
   expiresAt: Date;
 }
 
-export abstract class VerificationTokensRepository {
+export abstract class VerificationTokensRepository extends Repository {
   public abstract insert(
     data: CreateVerificationTokenData,
   ): Promise<VerificationTokenEntity>;

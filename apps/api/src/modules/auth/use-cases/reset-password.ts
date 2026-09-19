@@ -28,7 +28,7 @@ export class ResetPasswordUseCase extends UseCase<Options, Result> {
 
   private readonly accountsService = makeService(AccountsService);
 
-  private readonly sessionsService = makeRepository(SessionsService);
+  private readonly sessionsService = makeService(SessionsService);
 
   private readonly runInTransaction = transaction;
 
