@@ -30,6 +30,11 @@ export abstract class AccountsRepository extends Repository {
     passwordHash: string,
   ): Promise<void>;
 
+  public abstract updateCredentialsEmail(
+    userId: string,
+    email: string,
+  ): Promise<void>;
+
   public abstract insertOAuthAccount(
     data: CreateOAuthAccountData,
   ): Promise<AccountEntity>;

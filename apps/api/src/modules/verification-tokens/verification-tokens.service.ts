@@ -10,6 +10,7 @@ export interface IssueVerificationTokenInput {
   userId: string;
   type: VerificationTokenKind;
   ttlSeconds: number;
+  email?: string;
 }
 
 export interface IssuedVerificationToken {
@@ -26,6 +27,7 @@ export class VerificationTokensService extends Service {
     userId,
     type,
     ttlSeconds,
+    email,
   }: IssueVerificationTokenInput): Promise<IssuedVerificationToken> {
     const now = this.now();
     const { token, tokenHash } = VerificationTokenEntity.generate();
@@ -33,7 +35,13 @@ export class VerificationTokensService extends Service {
 
     await this.repository.invalidateAllForUser(userId, type, now);
 
-    await this.repository.insert({ userId, tokenHash, type, expiresAt });
+    await this.repository.insert({
+      userId,
+      tokenHash,
+      type,
+      email: email ?? null,
+      expiresAt,
+    });
 
     return { token, expiresAt };
   }
