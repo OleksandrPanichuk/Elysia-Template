@@ -79,7 +79,10 @@ export class CompleteOAuthFlowUseCase extends UseCase<Options, Result> {
     const existing = await this.usersRepository.findByEmail(email);
 
     if (existing) {
-      if (!identity.emailIsAuthoritative) {
+      const canAutoLink =
+        identity.emailIsAuthoritative && UserEntity.isEmailVerified(existing);
+
+      if (!canAutoLink) {
         throw new AccountLinkRequiredError(
           "An account with this email already exists. Sign in and link this provider from your settings.",
         );
