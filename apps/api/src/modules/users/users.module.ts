@@ -2,7 +2,11 @@ import { defineModule } from "@/core/module";
 import { bind, makeUseCase } from "@/core/registry";
 
 import { PostgresUsersRepository } from "./repositories";
-import { DeleteAccountUseCase, GetCurrentUserUseCase } from "./use-cases";
+import {
+  DeleteAccountUseCase,
+  GetCurrentUserUseCase,
+  UpdateProfileUseCase,
+} from "./use-cases";
 import { usersPlugin } from "./users.plugin";
 import { UsersRepository } from "./users.repository";
 import { usersRoutes } from "./users.routes";
@@ -20,5 +24,6 @@ export const usersModule = defineModule({
     usersRoutes({
       getCurrentUser: makeUseCase(GetCurrentUserUseCase),
       deleteAccount: makeUseCase(DeleteAccountUseCase),
+      updateProfile: makeUseCase(UpdateProfileUseCase),
     }),
 });

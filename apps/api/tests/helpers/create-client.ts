@@ -8,11 +8,28 @@ export interface Response<Body> {
   headers: Headers;
 }
 
+export type RequestHeaders = Record<string, string>;
+
 export interface TestClient {
-  get<Body = unknown>(path: string): Promise<Response<Body>>;
-  post<Body = unknown>(path: string, body?: unknown): Promise<Response<Body>>;
-  patch<Body = unknown>(path: string, body?: unknown): Promise<Response<Body>>;
-  delete<Body = unknown>(path: string, body?: unknown): Promise<Response<Body>>;
+  get<Body = unknown>(
+    path: string,
+    headers?: RequestHeaders,
+  ): Promise<Response<Body>>;
+  post<Body = unknown>(
+    path: string,
+    body?: unknown,
+    headers?: RequestHeaders,
+  ): Promise<Response<Body>>;
+  patch<Body = unknown>(
+    path: string,
+    body?: unknown,
+    headers?: RequestHeaders,
+  ): Promise<Response<Body>>;
+  delete<Body = unknown>(
+    path: string,
+    body?: unknown,
+    headers?: RequestHeaders,
+  ): Promise<Response<Body>>;
   cookies(): string;
   clearCookies(): void;
 }
@@ -49,6 +66,7 @@ export const createClient = (): TestClient => {
     method: string,
     path: string,
     body?: unknown,
+    headers: RequestHeaders = {},
   ): Promise<Response<Body>> => {
     const cookie = [...jar]
       .map(([name, value]) => `${name}=${value}`)
@@ -61,6 +79,7 @@ export const createClient = (): TestClient => {
           origin: ORIGIN,
           ...(cookie ? { cookie } : {}),
           ...(body === undefined ? {} : { "content-type": "application/json" }),
+          ...headers,
         },
         ...(body === undefined ? {} : { body: JSON.stringify(body) }),
       }),
@@ -76,10 +95,10 @@ export const createClient = (): TestClient => {
   };
 
   return {
-    get: (path) => send("GET", path),
-    post: (path, body) => send("POST", path, body),
-    patch: (path, body) => send("PATCH", path, body),
-    delete: (path, body) => send("DELETE", path, body),
+    get: (path, headers) => send("GET", path, undefined, headers),
+    post: (path, body, headers) => send("POST", path, body, headers),
+    patch: (path, body, headers) => send("PATCH", path, body, headers),
+    delete: (path, body, headers) => send("DELETE", path, body, headers),
     cookies: () => [...jar].map(([n, v]) => `${n}=${v}`).join("; "),
     clearCookies: () => jar.clear(),
   };

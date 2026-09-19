@@ -7,11 +7,19 @@ import { Service } from "@/core/service";
 
 import { type CreatedSession, SessionEntity } from "./session.entity";
 import { SessionStore, type StoredSession } from "./session.store";
-import { MAX_SESSIONS_PER_USER } from "./sessions.constants";
+import {
+  MAX_SESSIONS_PER_USER,
+  SESSION_SLIDE_AFTER_MS,
+} from "./sessions.constants";
 
 export interface CreateSessionOptions {
   userAgent?: string | null;
   ip?: string | null;
+}
+
+export interface ValidatedSession {
+  session: SessionEntity;
+  extended: boolean;
 }
 
 export class SessionsService extends Service {
@@ -35,6 +43,9 @@ export class SessionsService extends Service {
       ip: options?.ip ?? null,
     };
 
+    const active = await this.store.listByUserId(userId);
+    const newDevice = !SessionEntity.isKnownDevice(active, session.userAgent);
+
     const created = await this.store.create(SessionEntity.hash(token), session);
 
     if (!created) {
@@ -46,6 +57,7 @@ export class SessionsService extends Service {
     return {
       token,
       session,
+      newDevice,
     };
   }
 
@@ -55,7 +67,7 @@ export class SessionsService extends Service {
 
   public async validate(
     token: string | undefined,
-  ): Promise<SessionEntity | null> {
+  ): Promise<ValidatedSession | null> {
     if (!SessionEntity.isWellFormed(token)) {
       return null;
     }
@@ -67,12 +79,28 @@ export class SessionsService extends Service {
       return null;
     }
 
-    if (SessionEntity.isExpired(session, this.now())) {
+    const now = this.now();
+
+    if (SessionEntity.isExpired(session, now)) {
       await this.store.deleteByTokenHash(tokenHash);
       return null;
     }
 
-    return session;
+    if (!this.shouldSlide(session, now)) {
+      return { session, extended: false };
+    }
+
+    const expiresAt = now + this.ttlSeconds * SECOND;
+
+    await this.store.extend(tokenHash, expiresAt);
+
+    return { session: { ...session, expiresAt }, extended: true };
+  }
+
+  private shouldSlide(session: SessionEntity, now: number): boolean {
+    const lastExtendedAt = session.expiresAt - this.ttlSeconds * SECOND;
+
+    return now - lastExtendedAt >= SESSION_SLIDE_AFTER_MS;
   }
 
   public async revoke(token: string | undefined): Promise<void> {
