@@ -46,7 +46,7 @@ services:
       - main_network
 
   storage:
-    image: minio/minio:latest
+    image: quay.io/minio/minio:latest
     entrypoint:
       - sh
       - -c

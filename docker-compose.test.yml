@@ -83,7 +83,7 @@ services:
       retries: 15
 
   storage_test:
-    image: minio/minio:latest
+    image: quay.io/minio/minio:latest
     profiles: [integration]
     entrypoint:
       - sh
