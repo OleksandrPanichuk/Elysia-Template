@@ -35,7 +35,7 @@ services:
       start_period: 2s
 
   sessions_test:
-    image: redis:7.4-alpine
+    image: redis:8.10-alpine
     profiles: [integration]
     command: ["redis-server", "--save", "", "--appendonly", "no"]
     ports:
@@ -47,7 +47,7 @@ services:
       retries: 15
 
   cache_test:
-    image: redis:7.4-alpine
+    image: redis:8.10-alpine
     profiles: [integration]
     command: ["redis-server", "--save", "", "--appendonly", "no"]
     ports:
@@ -59,7 +59,7 @@ services:
       retries: 15
 
   queue_test:
-    image: redis:7.4-alpine
+    image: redis:8.10-alpine
     profiles: [integration]
     command: ["redis-server", "--save", "", "--appendonly", "no"]
     ports:
