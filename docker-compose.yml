@@ -58,7 +58,7 @@ services:
       timeout: 3s
       retries: 1
   sessions:
-    image: redis:7.4-alpine
+    image: redis:8.10-alpine
     command:
       - redis-server
       - --appendonly
@@ -84,7 +84,7 @@ services:
       start_period: 5s
 
   queue_redis:
-    image: redis:7.4-alpine
+    image: redis:8.10-alpine
     command: redis-server --appendonly yes
     ports:
       - "6379:6379"
@@ -101,7 +101,7 @@ services:
       start_period: 5s
 
   cache:
-    image: redis:7.4-alpine
+    image: redis:8.10-alpine
     command:
       - redis-server
       - --save
