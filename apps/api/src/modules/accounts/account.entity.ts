@@ -21,6 +21,13 @@ export class AccountEntity {
     return account.type === "CREDENTIALS";
   }
 
+  public static canDisconnect(
+    account: AccountEntity,
+    connected: number,
+  ): boolean {
+    return !AccountEntity.isCredentials(account) && connected > 1;
+  }
+
   public static normalize(
     account: AccountEntity,
     canDisconnect: boolean,

@@ -16,11 +16,11 @@ export const listConnectedAccountsRoute = ({
 
     action: ({ user }) => listConnectedAccounts.execute({ userId: user.id }),
 
-    postAction: ({ output }) => {
-      const canDisconnect = output.length > 1;
-
-      return output.map((account) =>
-        AccountEntity.normalize(account, canDisconnect),
-      );
-    },
+    postAction: ({ output }) =>
+      output.map((account) =>
+        AccountEntity.normalize(
+          account,
+          AccountEntity.canDisconnect(account, output.length),
+        ),
+      ),
   });
