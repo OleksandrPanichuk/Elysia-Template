@@ -1,5 +1,7 @@
 import type { Context, TSchema } from "elysia";
 
+import type { AppLogger } from "@/infrastructure";
+
 import type { AuthUser } from "./auth";
 
 type Static<S> = S extends TSchema ? S["static"] : never;
@@ -12,6 +14,8 @@ type RawContext = Pick<
   params: unknown;
   query: unknown;
 };
+
+type ActionContext = RawContext & { log: AppLogger };
 
 type RouteContext<
   Body extends TSchema | undefined,
@@ -27,6 +31,7 @@ type RouteContext<
   cookie: Context["cookie"];
   set: Context["set"];
   server: Context["server"];
+  log: AppLogger;
 } & (Auth extends true ? { user: AuthUser } : object);
 
 type PostActionContext<
@@ -191,10 +196,13 @@ export function defineRoute(
   } = definition;
 
   const handler = async (context: RawContext): Promise<Static<TSchema>> => {
-    const output = await action(context);
+    const output = await action(context as ActionContext);
 
     return postAction
-      ? await postAction({ ...context, output: output as never })
+      ? await postAction({
+          ...(context as ActionContext),
+          output: output as never,
+        })
       : output;
   };
 

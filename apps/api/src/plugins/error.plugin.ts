@@ -21,6 +21,11 @@ export const errorPlugin = new Elysia({ name: "errors" })
       };
     }
 
+    if (code === "PARSE") {
+      set.status = HttpStatus.BadRequest;
+      return { code: "BAD_REQUEST", error: "Malformed request body" };
+    }
+
     if (error instanceof AppError) {
       set.status = error.status;
       return { code: error.code, error: error.message, details: error.details };
