@@ -24,7 +24,7 @@ services:
       - -c
       - synchronous_commit=off
     tmpfs:
-      - /var/lib/postgresql/data
+      - /var/lib/postgresql
     ports:
       - "5433:5432"
     healthcheck:
