@@ -15,6 +15,23 @@ describe("error responses", () => {
     );
   });
 
+  test("answers a malformed JSON body with 400, not 500", async () => {
+    const response = await getApp().handle(
+      new Request("http://localhost:3000/api/auth/sign-in", {
+        method: "POST",
+        headers: {
+          origin: "http://localhost:3000",
+          "content-type": "application/json",
+        },
+        body: "{not json",
+      }),
+    );
+    const body = (await response.json()) as { code: string };
+
+    expect(response.status).toBe(400);
+    expect(body.code).toBe("BAD_REQUEST");
+  });
+
   test("answers an unknown path with a plain 404", async () => {
     const response = await createGuest().get<{ code: string }>("/api/nowhere");
 

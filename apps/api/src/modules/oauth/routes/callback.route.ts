@@ -38,6 +38,7 @@ export const callbackRoute = ({
       cookie,
       request,
       server,
+      log,
     }): Promise<CallbackOutcome> => {
       let transaction: OAuthTransaction;
 
@@ -101,6 +102,13 @@ export const callbackRoute = ({
           },
         };
       } catch (error) {
+        if (!(error instanceof AppError)) {
+          log.error(
+            { err: error, provider: params.provider },
+            "oauth callback failed",
+          );
+        }
+
         return {
           redirectTo: transaction.redirectTo,
           errorCode: error instanceof AppError ? error.code : OAUTH_FAILED_CODE,
