@@ -1,3 +1,4 @@
+import { Repository } from "@/core/repository";
 import type { AccountType } from "@/db";
 
 import type { AccountEntity } from "./account.entity";
@@ -15,7 +16,7 @@ export interface CreateOAuthAccountData {
   providerEmail: string;
 }
 
-export abstract class AccountsRepository {
+export abstract class AccountsRepository extends Repository {
   public abstract insertCredentials(
     data: CreateCredentialsAccountData,
   ): Promise<AccountEntity>;

@@ -1,3 +1,5 @@
+import { Repository } from "@/core/repository";
+
 import type { UserEntity } from "./user.entity";
 
 export interface CreateUserData {
@@ -5,7 +7,7 @@ export interface CreateUserData {
   email: string;
 }
 
-export abstract class UsersRepository {
+export abstract class UsersRepository extends Repository {
   public abstract insert(data: CreateUserData): Promise<UserEntity>;
   public abstract list(): Promise<UserEntity[]>;
   public abstract findById(id: string): Promise<UserEntity | null>;

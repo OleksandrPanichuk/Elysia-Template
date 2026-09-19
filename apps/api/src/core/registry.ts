@@ -1,3 +1,7 @@
+import type { Repository } from "./repository";
+import type { Service } from "./service";
+import type { UseCase } from "./use-case";
+
 type Instantiable<T> = new () => T;
 
 export type Token<T> = Instantiable<T> | (abstract new (...args: never[]) => T);
@@ -43,6 +47,12 @@ export const resetRegistry = (): void => {
   resolving.clear();
 };
 
-export const makeService = make;
-export const makeRepository = make;
-export const makeUseCase = make;
+export const makeService = <T extends Service>(token: Token<T>): T =>
+  make(token);
+
+export const makeRepository = <T extends Repository>(token: Token<T>): T =>
+  make(token);
+
+export const makeUseCase = <T extends UseCase<never, unknown>>(
+  token: Token<T>,
+): T => make(token);
