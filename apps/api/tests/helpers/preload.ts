@@ -58,7 +58,7 @@ beforeAll(async () => {
 
   await ensureDatabase(env.DATABASE_URL);
 
-  const migrator = createDatabase(env.DATABASE_URL);
+  const migrator = createDatabase({ url: env.DATABASE_URL });
 
   try {
     await migrate(migrator, { migrationsFolder: MIGRATIONS });
