@@ -1,2 +1,6 @@
 export { SendEmailJob } from "./job";
-export { type SendEmailPayload, SendEmailPayloadSchema } from "./schema";
+export {
+  type EmailClient,
+  type SendEmailPayload,
+  SendEmailPayloadSchema,
+} from "./schema";

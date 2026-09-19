@@ -19,6 +19,7 @@ export interface SessionEntity {
 export interface CreatedSession {
   token: string;
   session: SessionEntity;
+  newDevice: boolean;
 }
 
 export class SessionEntity {
@@ -46,6 +47,13 @@ export class SessionEntity {
       SessionEntity.isWellFormed(token) &&
       session.tokenHash === SessionEntity.hash(token)
     );
+  }
+
+  public static isKnownDevice(
+    sessions: SessionEntity[],
+    userAgent: string | null,
+  ): boolean {
+    return sessions.some((session) => session.userAgent === userAgent);
   }
 
   public static normalizeUserAgent(

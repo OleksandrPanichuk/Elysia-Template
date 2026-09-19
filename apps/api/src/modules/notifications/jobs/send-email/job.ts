@@ -11,6 +11,8 @@ import { Mailer } from "../../ports";
 import {
   type RenderedEmail,
   renderEmailVerificationEmail,
+  renderNewSignInEmail,
+  renderPasswordChangedEmail,
   renderPasswordResetEmail,
 } from "../../templates";
 import { type SendEmailPayload, SendEmailPayloadSchema } from "./schema";
@@ -37,14 +39,32 @@ export class SendEmailJob extends Job<SendEmailPayload> {
         return renderEmailVerificationEmail({
           name: payload.to.name,
           actionUrl: payload.verificationUrl,
-          expirationText: `This link will expire in ${payload.expiresInHours} hours.`,
+          noteText: `This link will expire in ${payload.expiresInHours} hours.`,
         });
 
       case EmailKind.PasswordReset:
         return renderPasswordResetEmail({
           name: payload.to.name,
           actionUrl: payload.resetUrl,
-          expirationText: `This password reset link expires in ${payload.expiresInMinutes} minutes.`,
+          noteText: `This password reset link expires in ${payload.expiresInMinutes} minutes.`,
+        });
+
+      case EmailKind.PasswordChanged:
+        return renderPasswordChangedEmail({
+          name: payload.to.name,
+          occurredAt: payload.occurredAt,
+          userAgent: payload.client.userAgent,
+          ip: payload.client.ip,
+          actionUrl: payload.securityUrl,
+        });
+
+      case EmailKind.NewSignIn:
+        return renderNewSignInEmail({
+          name: payload.to.name,
+          occurredAt: payload.occurredAt,
+          userAgent: payload.client.userAgent,
+          ip: payload.client.ip,
+          actionUrl: payload.securityUrl,
         });
     }
   }

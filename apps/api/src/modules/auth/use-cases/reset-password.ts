@@ -3,6 +3,7 @@ import { UseCase } from "@/core/use-case";
 import { transaction } from "@/db/executor";
 import { AccountsRepository, AccountsService } from "@/modules/accounts";
 import { SessionsService } from "@/modules/sessions";
+import { UsersRepository } from "@/modules/users";
 import {
   VerificationTokenEntity,
   VerificationTokenKind,
@@ -10,10 +11,13 @@ import {
 } from "@/modules/verification-tokens";
 
 import { InvalidTokenError } from "../auth.errors";
+import { AuthService } from "../auth.service";
 
 export interface ResetPasswordUseCaseOptions {
   token: string;
   password: string;
+  userAgent?: string | null;
+  ip?: string | null;
 }
 
 type Options = ResetPasswordUseCaseOptions;
@@ -30,11 +34,20 @@ export class ResetPasswordUseCase extends UseCase<Options, Result> {
 
   private readonly sessionsService = makeService(SessionsService);
 
+  private readonly usersRepository = makeRepository(UsersRepository);
+
+  private readonly authService = makeService(AuthService);
+
   private readonly runInTransaction = transaction;
 
   private readonly now = () => new Date();
 
-  public async execute({ token, password }: Options): Promise<Result> {
+  public async execute({
+    token,
+    password,
+    userAgent,
+    ip,
+  }: Options): Promise<Result> {
     if (!VerificationTokenEntity.isWellFormed(token)) {
       throw this.invalidToken();
     }
@@ -75,6 +88,13 @@ export class ResetPasswordUseCase extends UseCase<Options, Result> {
         VerificationTokenKind.PasswordReset,
         consumedAt,
       );
+    });
+
+    const user = await this.usersRepository.getById(resetToken.userId);
+
+    await this.authService.notifyPasswordChanged(user, {
+      userAgent: userAgent ?? null,
+      ip: ip ?? null,
     });
   }
 
