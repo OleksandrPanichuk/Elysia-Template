@@ -8,6 +8,7 @@ import {
   VerificationTokensService,
 } from "@/modules/verification-tokens";
 import { JobQueueUnavailableError } from "@/platform/jobs";
+import type { ClientInfo } from "@/shared";
 
 export class AuthService extends Service {
   private readonly tokensService = makeService(VerificationTokensService);
@@ -60,26 +61,70 @@ export class AuthService extends Service {
     });
   }
 
-  public async notifyEmailChanged(
+  public notifyPasswordChanged(
+    user: UserEntity,
+    client: ClientInfo,
+  ): Promise<void> {
+    return this.notify("password changed", user, () =>
+      this.notificationsService.sendPasswordChanged(
+        this.securityNotice(user, client),
+      ),
+    );
+  }
+
+  public notifyNewSignIn(user: UserEntity, client: ClientInfo): Promise<void> {
+    return this.notify("new sign-in", user, () =>
+      this.notificationsService.sendNewSignIn(
+        this.securityNotice(user, client),
+      ),
+    );
+  }
+
+  public notifyEmailChanged(
     user: UserEntity,
     previousEmail: string,
   ): Promise<void> {
-    const env = getEnv();
-
-    try {
-      await this.notificationsService.sendEmailChanged({
+    return this.notify("email changed", user, () =>
+      this.notificationsService.sendEmailChanged({
         userId: user.id,
         email: previousEmail,
         name: user.name,
         newEmail: user.email,
-        securityUrl: new URL(env.APP_SECURITY_PATH, env.APP_URL).toString(),
-      });
+        securityUrl: this.securityUrl(),
+      }),
+    );
+  }
+
+  private securityUrl(): string {
+    const env = getEnv();
+
+    return new URL(env.APP_SECURITY_PATH, env.APP_URL).toString();
+  }
+
+  private securityNotice(user: UserEntity, client: ClientInfo) {
+    return {
+      userId: user.id,
+      email: user.email,
+      name: user.name,
+      occurredAt: new Date(),
+      client,
+      securityUrl: this.securityUrl(),
+    };
+  }
+
+  private async notify(
+    notice: string,
+    user: UserEntity,
+    send: () => Promise<void>,
+  ): Promise<void> {
+    try {
+      await send();
     } catch (error) {
       if (!(error instanceof JobQueueUnavailableError)) throw error;
 
       this.logger.error(
-        { userId: user.id, err: error },
-        "email change notice was not queued",
+        { userId: user.id, notice, err: error },
+        "security notice was not queued",
       );
     }
   }

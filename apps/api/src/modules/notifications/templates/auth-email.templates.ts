@@ -11,7 +11,7 @@ interface ActionEmailOptions {
   description: string;
   actionLabel: string;
   actionUrl: string;
-  expirationText: string;
+  noteText: string;
   ignoreText: string;
 }
 
@@ -41,7 +41,7 @@ const renderActionEmail = ({
   description,
   actionLabel,
   actionUrl,
-  expirationText,
+  noteText,
   ignoreText,
 }: ActionEmailOptions): Omit<RenderedEmail, "subject"> => {
   const safeName = escapeHtml(normalizeName(name));
@@ -104,7 +104,7 @@ const renderActionEmail = ({
                 </table>
 
                 <p style="margin:28px 0 8px;font-size:13px;line-height:1.6;color:#6b7280;">
-                  ${escapeHtml(expirationText)}
+                  ${escapeHtml(noteText)}
                 </p>
 
                 <p style="margin:0 0 8px;font-size:13px;line-height:1.6;color:#6b7280;">
@@ -143,14 +143,14 @@ const renderActionEmail = ({
       "",
       `${actionLabel}: ${actionUrl}`,
       "",
-      expirationText,
+      noteText,
       ignoreText,
     ].join("\n"),
   };
 };
 
 export const renderEmailVerificationEmail = (
-  options: Pick<ActionEmailOptions, "name" | "actionUrl" | "expirationText">,
+  options: Pick<ActionEmailOptions, "name" | "actionUrl" | "noteText">,
 ): RenderedEmail => ({
   subject: "Verify your Velo email",
   ...renderActionEmail({
@@ -165,8 +165,63 @@ export const renderEmailVerificationEmail = (
   }),
 });
 
+export interface SecurityNoticeOptions {
+  name?: string;
+  occurredAt: string;
+  userAgent: string | null;
+  ip: string | null;
+  actionUrl: string;
+}
+
+const describeClient = ({
+  occurredAt,
+  userAgent,
+  ip,
+}: Pick<SecurityNoticeOptions, "occurredAt" | "userAgent" | "ip">): string =>
+  [
+    `When: ${new Date(occurredAt).toUTCString()}`,
+    `Device: ${userAgent ?? "unknown"}`,
+    `IP address: ${ip ?? "unknown"}`,
+  ].join(" · ");
+
+export const renderPasswordChangedEmail = (
+  options: SecurityNoticeOptions,
+): RenderedEmail => ({
+  subject: "Your Velo password was changed",
+  ...renderActionEmail({
+    name: options.name,
+    actionUrl: options.actionUrl,
+    title: "Your password was changed",
+    preheader: "The password on your Velo account was just changed.",
+    description:
+      "The password on your account was changed and every other session was signed out.",
+    actionLabel: "Review account security",
+    noteText: describeClient(options),
+    ignoreText:
+      "If this was you, there is nothing to do. If it was not, reset your password right away using the link on the sign-in page.",
+  }),
+});
+
+export const renderNewSignInEmail = (
+  options: SecurityNoticeOptions,
+): RenderedEmail => ({
+  subject: "New sign-in to your Velo account",
+  ...renderActionEmail({
+    name: options.name,
+    actionUrl: options.actionUrl,
+    title: "New sign-in from a device we have not seen",
+    preheader: "Someone just signed in to your Velo account from a new device.",
+    description:
+      "Your account was just signed in to from a device that had no active session.",
+    actionLabel: "Review active sessions",
+    noteText: describeClient(options),
+    ignoreText:
+      "If this was you, there is nothing to do. If it was not, sign out everywhere and change your password.",
+  }),
+});
+
 export const renderEmailChangeEmail = (
-  options: Pick<ActionEmailOptions, "name" | "actionUrl" | "expirationText">,
+  options: Pick<ActionEmailOptions, "name" | "actionUrl" | "noteText">,
 ): RenderedEmail => ({
   subject: "Confirm your new Velo email",
   ...renderActionEmail({
@@ -195,14 +250,14 @@ export const renderEmailChangedEmail = (options: {
     preheader: "The email on your Velo account was just changed.",
     description: `The email on your account was changed to ${options.newEmail}. This address will no longer receive messages about the account.`,
     actionLabel: "Review account security",
-    expirationText: "",
+    noteText: "",
     ignoreText:
       "If this was you, there is nothing to do. If it was not, reset your password right away using the link on the sign-in page.",
   }),
 });
 
 export const renderPasswordResetEmail = (
-  options: Pick<ActionEmailOptions, "name" | "actionUrl" | "expirationText">,
+  options: Pick<ActionEmailOptions, "name" | "actionUrl" | "noteText">,
 ): RenderedEmail => ({
   subject: "Reset your Velo password",
   ...renderActionEmail({

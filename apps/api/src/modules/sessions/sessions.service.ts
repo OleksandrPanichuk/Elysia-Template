@@ -43,6 +43,9 @@ export class SessionsService extends Service {
       ip: options?.ip ?? null,
     };
 
+    const active = await this.store.listByUserId(userId);
+    const newDevice = !SessionEntity.isKnownDevice(active, session.userAgent);
+
     const created = await this.store.create(SessionEntity.hash(token), session);
 
     if (!created) {
@@ -54,6 +57,7 @@ export class SessionsService extends Service {
     return {
       token,
       session,
+      newDevice,
     };
   }
 

@@ -1,7 +1,7 @@
 import { make } from "@/core/registry";
 import { Service } from "@/core/service";
 
-import { SendEmailJob } from "./jobs";
+import { type EmailClient, SendEmailJob } from "./jobs";
 import { EmailKind } from "./notifications.constants";
 
 interface AuthNotificationRecipient {
@@ -18,6 +18,12 @@ interface SendEmailVerificationOptions extends AuthNotificationRecipient {
 interface SendPasswordResetOptions extends AuthNotificationRecipient {
   resetUrl: string;
   expiresInMinutes: number;
+}
+
+interface SendSecurityNoticeOptions extends AuthNotificationRecipient {
+  occurredAt: Date;
+  client: EmailClient;
+  securityUrl: string;
 }
 
 interface SendEmailChangeOptions extends AuthNotificationRecipient {
@@ -44,6 +50,38 @@ export class NotificationsService extends Service {
       verificationUrl,
       expiresInHours,
     });
+  }
+
+  public sendPasswordChanged(
+    options: SendSecurityNoticeOptions,
+  ): Promise<void> {
+    return this.sendEmail.dispatch({
+      kind: EmailKind.PasswordChanged,
+      ...this.securityNotice(options),
+    });
+  }
+
+  public sendNewSignIn(options: SendSecurityNoticeOptions): Promise<void> {
+    return this.sendEmail.dispatch({
+      kind: EmailKind.NewSignIn,
+      ...this.securityNotice(options),
+    });
+  }
+
+  private securityNotice({
+    userId,
+    email,
+    name,
+    occurredAt,
+    client,
+    securityUrl,
+  }: SendSecurityNoticeOptions) {
+    return {
+      to: { userId, email, name },
+      occurredAt: occurredAt.toISOString(),
+      client,
+      securityUrl,
+    };
   }
 
   public sendEmailChange(options: SendEmailChangeOptions): Promise<void> {
