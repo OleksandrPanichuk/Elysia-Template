@@ -84,6 +84,20 @@ export class PostgresUsersRepository extends UsersRepository {
       .where(eq(usersSchema.id, id));
   }
 
+  public async updateEmail(
+    id: string,
+    email: string,
+    verifiedAt: Date,
+  ): Promise<void> {
+    await this.db
+      .update(usersSchema)
+      .set({
+        email: UserEntity.normalizeEmail(email),
+        emailVerifiedAt: verifiedAt,
+      })
+      .where(eq(usersSchema.id, id));
+  }
+
   public async deleteById(id: string): Promise<void> {
     await this.db.delete(usersSchema).where(eq(usersSchema.id, id));
   }

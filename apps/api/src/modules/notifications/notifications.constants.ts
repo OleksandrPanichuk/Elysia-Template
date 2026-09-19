@@ -1,6 +1,8 @@
 export const EmailKind = {
   EmailVerification: "email_verification",
   PasswordReset: "password_reset",
+  EmailChange: "email_change",
+  EmailChanged: "email_changed",
 } as const;
 
 export type EmailKind = (typeof EmailKind)[keyof typeof EmailKind];

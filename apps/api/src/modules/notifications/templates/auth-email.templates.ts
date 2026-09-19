@@ -165,6 +165,42 @@ export const renderEmailVerificationEmail = (
   }),
 });
 
+export const renderEmailChangeEmail = (
+  options: Pick<ActionEmailOptions, "name" | "actionUrl" | "expirationText">,
+): RenderedEmail => ({
+  subject: "Confirm your new Velo email",
+  ...renderActionEmail({
+    ...options,
+    title: "Confirm your new email",
+    preheader:
+      "Confirm this address to make it the email on your Velo account.",
+    description:
+      "You asked to move your Velo account to this email address. Confirm it to finish the change.",
+    actionLabel: "Confirm new email",
+    ignoreText:
+      "If you did not ask to change your email, you can safely ignore this message. Your account is unchanged.",
+  }),
+});
+
+export const renderEmailChangedEmail = (options: {
+  name?: string;
+  newEmail: string;
+  actionUrl: string;
+}): RenderedEmail => ({
+  subject: "Your Velo email was changed",
+  ...renderActionEmail({
+    name: options.name,
+    actionUrl: options.actionUrl,
+    title: "Your email was changed",
+    preheader: "The email on your Velo account was just changed.",
+    description: `The email on your account was changed to ${options.newEmail}. This address will no longer receive messages about the account.`,
+    actionLabel: "Review account security",
+    expirationText: "",
+    ignoreText:
+      "If this was you, there is nothing to do. If it was not, reset your password right away using the link on the sign-in page.",
+  }),
+});
+
 export const renderPasswordResetEmail = (
   options: Pick<ActionEmailOptions, "name" | "actionUrl" | "expirationText">,
 ): RenderedEmail => ({

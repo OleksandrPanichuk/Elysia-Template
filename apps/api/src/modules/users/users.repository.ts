@@ -23,5 +23,11 @@ export abstract class UsersRepository extends Repository {
     verifiedAt: Date,
   ): Promise<void>;
 
+  public abstract updateEmail(
+    id: string,
+    email: string,
+    verifiedAt: Date,
+  ): Promise<void>;
+
   public abstract deleteById(id: string): Promise<void>;
 }
