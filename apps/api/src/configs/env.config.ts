@@ -50,7 +50,6 @@ export const EnvSchema = z.object({
       (value) => new URL(value).origin === value,
       "Use an exact origin without a path or trailing slash",
     ),
-  MAIL_FROM: z.email().default("no-reply@velo.local"),
   EMAIL_VERIFICATION_TTL_SECONDS: z.coerce
     .number()
     .int()
