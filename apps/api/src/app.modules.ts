@@ -11,6 +11,7 @@ import { databaseModule } from "@/platform/database";
 import { healthModule } from "@/platform/health";
 import { jobsModule } from "@/platform/jobs";
 import { rateLimitModule } from "@/platform/rate-limit";
+import { storageModule } from "@/platform/storage";
 
 export const modules = [
   databaseModule,
@@ -18,6 +19,7 @@ export const modules = [
   sessionsModule,
   cacheModule,
   rateLimitModule,
+  storageModule,
   notificationsModule,
   usersModule,
   accountsModule,
