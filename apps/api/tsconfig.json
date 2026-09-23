@@ -8,12 +8,16 @@
       ],
       "@tests/*": [
         "./tests/*"
+      ],
+      "@seeders/*": [
+        "./seeders/*"
       ]
     }
   },
   "include": [
     "src/**/*.ts",
     "tests/**/*.ts",
+    "seeders/**/*.ts",
     "eslint.config.js"
   ],
   "exclude": [
