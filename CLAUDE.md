@@ -56,7 +56,7 @@ infrastructure/<tech>/   technology clients: connect, reconnect, ping, close
 ```
 
 - **`platform/`** holds what the app offers to modules rather than to users:
-  `cache`, `jobs`, `rate-limit`, `health`. The test is "does it have a domain?" —
+  `cache`, `jobs`, `rate-limit`, `health`, `captcha`, `error-reporting`. The test is "does it have a domain?" —
   an entity, a repository, a use case or a route about the product belongs in
   `modules/`; a port plus a `defineModule` lifecycle that any module may consume
   belongs in `platform/`. Both go through `defineModule`, so a platform folder

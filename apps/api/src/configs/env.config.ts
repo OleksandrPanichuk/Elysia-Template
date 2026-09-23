@@ -97,6 +97,13 @@ export const EnvSchema = z.object({
   STORAGE_S3_ENDPOINT: z.url({ protocol: /^https?$/ }).optional(),
   STORAGE_S3_FORCE_PATH_STYLE: z.stringbool().optional(),
 
+  SENTRY_DSN: z.preprocess(
+    emptyAsUnset,
+    z.url({ protocol: /^https?$/ }).optional(),
+  ),
+  SENTRY_ENVIRONMENT: z.preprocess(emptyAsUnset, z.string().min(1).optional()),
+  SENTRY_RELEASE: z.preprocess(emptyAsUnset, z.string().min(1).optional()),
+
   RECAPTCHA_V3_SECRET: z.preprocess(emptyAsUnset, z.string().min(1).optional()),
   RECAPTCHA_V2_SECRET: z.preprocess(emptyAsUnset, z.string().min(1).optional()),
   CAPTCHA_SCORE_THRESHOLD: z.preprocess(

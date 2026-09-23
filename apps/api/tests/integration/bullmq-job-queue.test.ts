@@ -2,9 +2,12 @@ import { Queue } from "bullmq";
 import { afterAll, describe, expect, test } from "bun:test";
 import z from "zod";
 
+import type { MemoryErrorReporter } from "@/adapters/error-reporting/memory.error-reporter";
 import { BullMqJobQueue } from "@/adapters/jobs/bullmq.job-queue";
 import { getEnv } from "@/configs";
+import { make } from "@/core/registry";
 import { createOwnedRedisConnection } from "@/infrastructure/redis";
+import { ErrorReporter } from "@/platform/error-reporting";
 import { Job } from "@/platform/jobs";
 
 const url = process.env.TEST_JOBS_REDIS_URL;
@@ -48,6 +51,24 @@ class ScheduledProbeJob extends Job<Payload> {
 
   public handle(): Promise<void> {
     return Promise.resolve();
+  }
+}
+
+const failedAttempts: number[] = [];
+
+class FailingProbeJob extends Job<Payload> {
+  public readonly name = "test.failing";
+  public readonly queue = "test-failing-queue";
+  public readonly schema = PayloadSchema;
+  public readonly defaults = {
+    attempts: 2,
+    backoff: { type: "fixed" as const, delayMs: 10 },
+  };
+
+  public handle(): Promise<void> {
+    failedAttempts.push(Date.now());
+
+    return Promise.reject(new Error("probe failure"));
   }
 }
 
@@ -115,5 +136,23 @@ describe.skipIf(!queue)("BullMqJobQueue against a real Redis", () => {
     } finally {
       await inspector.close();
     }
+  });
+
+  test("reports a job once, when its last attempt fails", async () => {
+    const job = new FailingProbeJob();
+    const reporter = make(ErrorReporter) as MemoryErrorReporter;
+
+    queue!.process(job);
+    await queue!.enqueue(job, { value: "doomed" });
+    await settle(() => reporter.reports().length > 0);
+    await Bun.sleep(200);
+
+    expect(failedAttempts).toHaveLength(2);
+    expect(reporter.reports()).toHaveLength(1);
+    expect(reporter.reports()[0]?.report).toMatchObject({
+      source: "job",
+      tags: { job: "test.failing", queue: "test-failing-queue" },
+      extra: { attempts: 2 },
+    });
   });
 });

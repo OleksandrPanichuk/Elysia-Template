@@ -6,6 +6,7 @@ import { getTableName, is, Table } from "drizzle-orm";
 import { migrate } from "drizzle-orm/bun-sql/migrator";
 
 import type { MemoryCaptchaVerifier } from "@/adapters/captcha/memory.captcha-verifier";
+import type { MemoryErrorReporter } from "@/adapters/error-reporting/memory.error-reporter";
 import type { MemoryMailer } from "@/adapters/mail/memory.mailer";
 import type { MemoryRateLimitStore } from "@/adapters/rate-limit/memory.rate-limit-store";
 import { loadEnv, setEnv } from "@/configs";
@@ -16,6 +17,7 @@ import * as schema from "@/db/schema";
 import { closeInfrastructure } from "@/infrastructure";
 import { Mailer } from "@/modules/notifications/ports";
 import { CaptchaVerifier } from "@/platform/captcha";
+import { ErrorReporter } from "@/platform/error-reporting";
 import { RateLimitStore } from "@/platform/rate-limit";
 
 import { setApp } from "./app";
@@ -81,6 +83,7 @@ afterEach(async () => {
   (make(Mailer) as MemoryMailer).clear();
   (make(RateLimitStore) as MemoryRateLimitStore).clear();
   (make(CaptchaVerifier) as MemoryCaptchaVerifier).clear();
+  (make(ErrorReporter) as MemoryErrorReporter).clear();
 });
 
 afterAll(async () => {

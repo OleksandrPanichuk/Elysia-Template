@@ -6,8 +6,10 @@ import {
   Worker,
 } from "bullmq";
 
+import { make } from "@/core/registry";
 import { getLogger } from "@/infrastructure";
 import type { RedisConnection } from "@/infrastructure/redis";
+import { ErrorReporter } from "@/platform/error-reporting/ports/error-reporter";
 import type { Job } from "@/platform/jobs/job";
 import type { EnqueueJobOptions, JobMeta } from "@/platform/jobs/job.typedefs";
 import {
@@ -200,6 +202,14 @@ export class BullMqJobQueue extends JobQueue {
           },
           "job failed",
         );
+
+        if (raw && this.isFinalFailure(raw, error)) {
+          make(ErrorReporter).report(error, {
+            source: "job",
+            tags: { job: raw.name, queue: name },
+            extra: { jobId: raw.id, attempts: raw.attemptsMade },
+          });
+        }
       });
 
       worker.on("error", (error) => {
@@ -213,6 +223,13 @@ export class BullMqJobQueue extends JobQueue {
     }
 
     return worker;
+  }
+
+  private isFinalFailure(raw: BullJob, error: Error): boolean {
+    return (
+      error instanceof UnrecoverableError ||
+      raw.attemptsMade >= (raw.opts.attempts ?? 1)
+    );
   }
 
   private dispatchFor(name: string): Dispatch {
