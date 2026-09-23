@@ -1,11 +1,8 @@
 import * as Sentry from "@sentry/bun";
 
+import { type ErrorReport, ErrorReporter } from "@/core/error-reporting";
 import { getLogger } from "@/infrastructure";
 import { ERROR_REPORTING_FLUSH_TIMEOUT_MS } from "@/platform/error-reporting/error-reporting.constants";
-import {
-  type ErrorReport,
-  ErrorReporter,
-} from "@/platform/error-reporting/ports/error-reporter";
 
 export interface SentryErrorReporterOptions {
   dsn: string;

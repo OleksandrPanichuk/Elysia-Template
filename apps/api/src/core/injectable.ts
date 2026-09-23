@@ -1,4 +1,5 @@
 import { type Env, getEnv } from "@/configs";
+import { type ErrorReport, reportError } from "@/core/error-reporting";
 import { type AppLogger, getLogger } from "@/infrastructure";
 
 export abstract class Injectable {
@@ -20,5 +21,9 @@ export abstract class Injectable {
     }
 
     return child;
+  }
+
+  protected report(error: unknown, report: Partial<ErrorReport> = {}): void {
+    reportError(error, { source: this.constructor.name, ...report });
   }
 }

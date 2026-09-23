@@ -1,8 +1,5 @@
+import { type ErrorReport, ErrorReporter } from "@/core/error-reporting";
 import { getLogger } from "@/infrastructure";
-import {
-  type ErrorReport,
-  ErrorReporter,
-} from "@/platform/error-reporting/ports/error-reporter";
 
 export class NoopErrorReporter extends ErrorReporter {
   public report(_error: unknown, { source }: ErrorReport): void {

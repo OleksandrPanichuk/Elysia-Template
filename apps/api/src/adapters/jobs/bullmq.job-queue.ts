@@ -6,10 +6,8 @@ import {
   Worker,
 } from "bullmq";
 
-import { make } from "@/core/registry";
 import { getLogger } from "@/infrastructure";
 import type { RedisConnection } from "@/infrastructure/redis";
-import { ErrorReporter } from "@/platform/error-reporting/ports/error-reporter";
 import type { Job } from "@/platform/jobs/job";
 import type { EnqueueJobOptions, JobMeta } from "@/platform/jobs/job.typedefs";
 import {
@@ -117,14 +115,6 @@ export class BullMqJobQueue extends JobQueue {
   }
 
   private async run<T>(job: Job<T>, raw: BullJob): Promise<void> {
-    const result = job.schema.safeParse(raw.data);
-
-    if (!result.success) {
-      throw new UnrecoverableError(
-        `Invalid payload for job "${job.name}": ${result.error.message}`,
-      );
-    }
-
     const meta: JobMeta = {
       jobId: raw.id ?? "unknown",
       name: job.name,
@@ -132,10 +122,29 @@ export class BullMqJobQueue extends JobQueue {
       attempts: raw.attemptsMade + 1,
     };
 
+    const result = job.schema.safeParse(raw.data);
+
+    if (!result.success) {
+      const invalid = new UnprocessableJobError(
+        `Invalid payload for job "${job.name}": ${result.error.message}`,
+        result.error,
+      );
+
+      job.failed(invalid, meta);
+
+      throw new UnrecoverableError(invalid.message);
+    }
+
     try {
       await job.handle(result.data, meta);
     } catch (cause) {
-      if (cause instanceof UnprocessableJobError) {
+      const unprocessable = cause instanceof UnprocessableJobError;
+
+      if (unprocessable || meta.attempts >= (raw.opts.attempts ?? 1)) {
+        job.failed(cause, meta);
+      }
+
+      if (unprocessable) {
         throw new UnrecoverableError(cause.message);
       }
 
@@ -202,14 +211,6 @@ export class BullMqJobQueue extends JobQueue {
           },
           "job failed",
         );
-
-        if (raw && this.isFinalFailure(raw, error)) {
-          make(ErrorReporter).report(error, {
-            source: "job",
-            tags: { job: raw.name, queue: name },
-            extra: { jobId: raw.id, attempts: raw.attemptsMade },
-          });
-        }
       });
 
       worker.on("error", (error) => {
@@ -223,13 +224,6 @@ export class BullMqJobQueue extends JobQueue {
     }
 
     return worker;
-  }
-
-  private isFinalFailure(raw: BullJob, error: Error): boolean {
-    return (
-      error instanceof UnrecoverableError ||
-      raw.attemptsMade >= (raw.opts.attempts ?? 1)
-    );
   }
 
   private dispatchFor(name: string): Dispatch {

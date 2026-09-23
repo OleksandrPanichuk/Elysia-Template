@@ -1,11 +1,10 @@
 import { Elysia } from "elysia";
 
 import type { AuthUser } from "@/core/auth";
+import { reportError } from "@/core/error-reporting";
 import { AppError } from "@/core/errors";
 import { HttpStatus } from "@/core/http";
-import { make } from "@/core/registry";
 import { getLogger } from "@/infrastructure";
-import { ErrorReporter } from "@/platform/error-reporting";
 import { getRequestContext } from "@/shared";
 
 const INTERNAL_ERROR_MESSAGE = "Something went wrong";
@@ -52,7 +51,7 @@ export const errorPlugin = new Elysia({ name: "errors" })
       "unhandled error",
     );
 
-    make(ErrorReporter).report(error, {
+    reportError(error, {
       source: "http",
       requestId,
       userId,

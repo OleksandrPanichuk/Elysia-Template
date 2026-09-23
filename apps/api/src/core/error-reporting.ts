@@ -1,3 +1,6 @@
+import { make } from "@/core/registry";
+import { getRequestContext } from "@/shared";
+
 export interface ErrorReport {
   source: string;
   requestId?: string;
@@ -17,3 +20,10 @@ export abstract class ErrorReporter {
     return Promise.resolve();
   }
 }
+
+export const reportError = (error: unknown, report: ErrorReport): void => {
+  make(ErrorReporter).report(error, {
+    requestId: getRequestContext()?.requestId,
+    ...report,
+  });
+};

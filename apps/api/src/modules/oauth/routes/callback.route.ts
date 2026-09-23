@@ -1,12 +1,11 @@
 import { t } from "elysia";
 
+import { reportError } from "@/core/error-reporting";
 import { AppError } from "@/core/errors";
 import { HttpStatus } from "@/core/http";
-import { make } from "@/core/registry";
 import { defineRoute } from "@/core/route";
 import { writeSessionCookie } from "@/modules/sessions";
-import { ErrorReporter } from "@/platform/error-reporting";
-import { getClientInfo, getRequestContext } from "@/shared";
+import { getClientInfo } from "@/shared";
 
 import { OAuthCallbackQuery, OAuthProviderParams } from "../dto";
 import { OAuthTransactionInvalidError } from "../oauth.errors";
@@ -110,9 +109,8 @@ export const callbackRoute = ({
             "oauth callback failed",
           );
 
-          make(ErrorReporter).report(error, {
+          reportError(error, {
             source: "oauth-callback",
-            requestId: getRequestContext()?.requestId,
             tags: { provider: params.provider },
           });
         }

@@ -2,10 +2,9 @@ import { MemoryErrorReporter } from "@/adapters/error-reporting/memory.error-rep
 import { NoopErrorReporter } from "@/adapters/error-reporting/noop.error-reporter";
 import { SentryErrorReporter } from "@/adapters/error-reporting/sentry.error-reporter";
 import { NodeEnv } from "@/configs";
+import { ErrorReporter } from "@/core/error-reporting";
 import { defineModule } from "@/core/module";
 import { bind } from "@/core/registry";
-
-import { ErrorReporter } from "./ports";
 
 export const errorReportingModule = defineModule({
   name: "error-reporting",

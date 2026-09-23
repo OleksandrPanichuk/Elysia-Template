@@ -238,6 +238,24 @@ booting twice leaves one schedule rather than two. Schedules do not fire under
 `NODE_ENV=test` — `MemoryJobQueue` accepts them and does nothing, so a test run
 never waits on a clock.
 
+## Reporting errors
+
+Anything that extends `Injectable` (services, use cases, jobs) reports an
+unexpected error with `this.report(error, { tags, extra })`. The source
+defaults to the class name and the request id is taken from the request
+context, so a call site carries only what is specific to it. Code that is not
+a class, such as a route or a plugin, calls `reportError(error, { source })`.
+Report what the app did not expect, not what it answers on purpose: an
+`AppError` is a response, not an incident.
+
+A job's final failure goes through `Job.failed(error, meta)`, which the queue
+adapter calls once the last attempt has failed; retries are logged, not
+reported. A job overrides `failed` to handle its own failure differently.
+
+The `ErrorReporter` port lives in `core`, not in `platform/error-reporting`,
+because `Injectable` is in `core` and `core` never imports `platform`. The
+platform folder still owns the lifecycle and picks the adapter.
+
 ## Tests
 
 `bun test` sets `NODE_ENV=test`, so every port resolves to its memory adapter

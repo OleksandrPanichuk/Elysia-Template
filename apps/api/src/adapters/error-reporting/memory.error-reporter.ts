@@ -1,7 +1,4 @@
-import {
-  type ErrorReport,
-  ErrorReporter,
-} from "@/platform/error-reporting/ports/error-reporter";
+import { type ErrorReport, ErrorReporter } from "@/core/error-reporting";
 
 export interface ReportedError {
   error: unknown;
