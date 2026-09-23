@@ -1,18 +1,23 @@
 import { afterAll, beforeEach, describe, expect, test } from "bun:test";
 
 import { NazliRateLimitStore } from "@/adapters/rate-limit/nazli.rate-limit-store";
+import { getEnv } from "@/configs";
 import { createOwnedRedisConnection } from "@/infrastructure/redis";
 
 const url = process.env.TEST_RATE_LIMIT_REDIS_URL;
+
+const KEY_PREFIX = `${getEnv().APP_SLUG}:test:rate-limit`;
 
 const connection = url
   ? createOwnedRedisConnection({ name: "test-rate-limit", url })
   : undefined;
 
-const store = connection ? new NazliRateLimitStore(connection) : undefined;
+const store = connection
+  ? new NazliRateLimitStore(connection, KEY_PREFIX)
+  : undefined;
 
 const clear = async () => {
-  const keys = await connection!.instance.keys("velo:rate-limit*");
+  const keys = await connection!.instance.keys(`${KEY_PREFIX}*`);
 
   if (keys.length > 0) await connection!.instance.del(...keys);
 };
@@ -54,7 +59,7 @@ describe.skipIf(!store)("NazliRateLimitStore against a real Redis", () => {
 
     await store!.hit({ key, limit: 3, windowMs: 30_000 });
 
-    const keys = await connection!.instance.keys("velo:rate-limit*");
+    const keys = await connection!.instance.keys(`${KEY_PREFIX}*`);
     const ttl = await connection!.instance.pttl(keys[0]!);
 
     expect(ttl).toBeGreaterThan(20_000);
@@ -83,7 +88,7 @@ describe.skipIf(!store)("NazliRateLimitStore against a real Redis", () => {
       url: "redis://127.0.0.1:59997",
       options: { maxRetriesPerRequest: 1, retryStrategy: () => null },
     });
-    const offline = new NazliRateLimitStore(dead);
+    const offline = new NazliRateLimitStore(dead, KEY_PREFIX);
 
     const result = await offline.hit({ key: "k", limit: 1, windowMs: 1_000 });
 

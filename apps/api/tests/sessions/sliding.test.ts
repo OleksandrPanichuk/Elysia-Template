@@ -2,6 +2,7 @@ import { createUser } from "@tests/helpers";
 import { afterEach, describe, expect, spyOn, test } from "bun:test";
 
 import { HOUR, MINUTE } from "@/constants";
+import { getSessionCookieName } from "@/modules/sessions";
 
 interface SessionModel {
   current: boolean;
@@ -50,7 +51,7 @@ describe("sliding sessions", () => {
     const response = await user.get("/api/users/me");
     const cookie = response.headers
       .getSetCookie()
-      .find((line) => line.startsWith("velo-session="));
+      .find((line) => line.startsWith(`${getSessionCookieName()}=`));
 
     expect(response.status).toBe(200);
     expect(cookie).toContain("Expires=");

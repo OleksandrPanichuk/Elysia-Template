@@ -31,7 +31,10 @@ export const rateLimitModule = defineModule({
         retryStrategy: () => null,
       },
     });
-    const store = new NazliRateLimitStore(connection);
+    const store = new NazliRateLimitStore(
+      connection,
+      `${env.APP_SLUG}:rate-limit`,
+    );
 
     bind(RateLimitStore, () => store);
 

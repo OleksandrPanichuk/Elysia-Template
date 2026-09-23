@@ -28,7 +28,7 @@ export class BullMqJobQueue extends JobQueue {
 
   constructor(
     private readonly connection: RedisConnection,
-    private readonly keyPrefix = "velo:jobs",
+    private readonly keyPrefix: string,
   ) {
     super();
   }

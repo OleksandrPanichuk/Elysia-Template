@@ -14,7 +14,6 @@ import {
   OAUTH_CODE_VERIFIER_BYTES,
   OAUTH_NONCE_BYTES,
   OAUTH_STATE_BYTES,
-  OAUTH_TRANSACTION_COOKIE_NAME,
   OAUTH_TRANSACTION_TTL_MS,
   type OAuthProviderName,
 } from "./oauth.constants";
@@ -129,9 +128,9 @@ export class OAuthTransaction {
   }
 
   private static get cookieName(): string {
-    return OAuthTransaction.isProduction
-      ? `__Host-${OAUTH_TRANSACTION_COOKIE_NAME}`
-      : OAUTH_TRANSACTION_COOKIE_NAME;
+    const name = `${getEnv().APP_SLUG}-oauth-tx`;
+
+    return OAuthTransaction.isProduction ? `__Host-${name}` : name;
   }
 
   private static get cookieOptions() {

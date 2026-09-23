@@ -13,8 +13,10 @@ export const cacheModule = defineModule({
   name: "cache",
 
   register: ({ env }) => {
+    const keyPrefix = `${env.APP_SLUG}:cache:`;
+
     if (env.NODE_ENV === NodeEnv.Test) {
-      const cache = new MemoryCache();
+      const cache = new MemoryCache(keyPrefix);
 
       bind(Cache, () => cache);
 
@@ -30,7 +32,7 @@ export const cacheModule = defineModule({
         maxRetriesPerRequest: 1,
       },
     });
-    const cache = new RedisCache(connection);
+    const cache = new RedisCache(connection, keyPrefix);
 
     bind(Cache, () => cache);
 

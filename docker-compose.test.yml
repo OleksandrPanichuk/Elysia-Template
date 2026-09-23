@@ -6,7 +6,7 @@
 #   make test-integration  adds the services the real adapters talk to
 #   make test-down         removes it all
 
-name: velo-test
+name: ${APP_SLUG:-app}-test
 
 services:
   db_test:
@@ -88,7 +88,7 @@ services:
     entrypoint:
       - sh
       - -c
-      - mkdir -p /data/velo-test && exec minio server /data
+      - mkdir -p /data/test-bucket && exec minio server /data
     environment:
       - MINIO_ROOT_USER=minioadmin
       - MINIO_ROOT_PASSWORD=minioadmin

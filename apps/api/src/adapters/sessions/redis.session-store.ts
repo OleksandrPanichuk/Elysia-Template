@@ -1,7 +1,6 @@
 import type { Redis } from "ioredis";
 import z from "zod";
 
-import { getEnv } from "@/configs";
 import { getLogger } from "@/infrastructure";
 import type { RedisConnection } from "@/infrastructure/redis";
 import type { SessionEntity } from "@/modules/sessions/session.entity";
@@ -30,7 +29,7 @@ class CorruptSessionError extends Error {}
 export class RedisSessionStore extends SessionStore {
   constructor(
     private readonly connection: RedisConnection,
-    private readonly keyPrefix = getEnv().SESSIONS_KEY_PREFIX,
+    private readonly keyPrefix: string,
   ) {
     super();
   }

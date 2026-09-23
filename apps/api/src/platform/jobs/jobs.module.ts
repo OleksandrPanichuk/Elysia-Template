@@ -28,7 +28,7 @@ export const jobsModule = defineModule({
         enableReadyCheck: true,
       },
     });
-    const queue = new BullMqJobQueue(connection);
+    const queue = new BullMqJobQueue(connection, `${env.APP_SLUG}:jobs`);
 
     bind(JobQueue, () => queue);
 

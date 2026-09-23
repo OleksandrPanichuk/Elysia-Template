@@ -1,17 +1,20 @@
 import { afterAll, beforeEach, describe, expect, test } from "bun:test";
 
 import { RedisSessionStore } from "@/adapters/sessions/redis.session-store";
+import { getEnv } from "@/configs";
 import { createOwnedRedisConnection } from "@/infrastructure/redis";
 import type { SessionEntity } from "@/modules/sessions";
 
 const url = process.env.TEST_SESSIONS_REDIS_URL;
+
+const KEY_PREFIX = `${getEnv().APP_SLUG}:test:sessions:`;
 
 const connection = url
   ? createOwnedRedisConnection({ name: "test-sessions", url })
   : undefined;
 
 const store = connection
-  ? new RedisSessionStore(connection, "velo:test:sessions:")
+  ? new RedisSessionStore(connection, KEY_PREFIX)
   : undefined;
 
 const session = (over: Partial<SessionEntity> = {}): SessionEntity => ({
@@ -27,7 +30,7 @@ const session = (over: Partial<SessionEntity> = {}): SessionEntity => ({
 afterAll(async () => {
   if (!connection) return;
 
-  const keys = await connection.instance.keys("velo:test:sessions:*");
+  const keys = await connection.instance.keys(`${KEY_PREFIX}*`);
 
   if (keys.length > 0) await connection.instance.del(...keys);
 
@@ -36,7 +39,7 @@ afterAll(async () => {
 
 describe.skipIf(!store)("RedisSessionStore against a real Redis", () => {
   beforeEach(async () => {
-    const keys = await connection!.instance.keys("velo:test:sessions:*");
+    const keys = await connection!.instance.keys(`${KEY_PREFIX}*`);
 
     if (keys.length > 0) await connection!.instance.del(...keys);
   });
@@ -59,7 +62,7 @@ describe.skipIf(!store)("RedisSessionStore against a real Redis", () => {
 
     await store!.create("hash-ttl", entry);
 
-    const ttl = await connection!.instance.pttl("velo:test:sessions:hash-ttl");
+    const ttl = await connection!.instance.pttl(`${KEY_PREFIX}hash-ttl`);
 
     expect(ttl).toBeGreaterThan(20_000);
     expect(ttl).toBeLessThanOrEqual(30_000);
@@ -80,11 +83,11 @@ describe.skipIf(!store)("RedisSessionStore against a real Redis", () => {
     const userId = crypto.randomUUID();
 
     await store!.create("ghost", session({ userId }));
-    await connection!.instance.del("velo:test:sessions:ghost");
+    await connection!.instance.del(`${KEY_PREFIX}ghost`);
 
     expect(await store!.listByUserId(userId)).toEqual([]);
     expect(
-      await connection!.instance.smembers(`velo:test:sessions:user:${userId}`),
+      await connection!.instance.smembers(`${KEY_PREFIX}user:${userId}`),
     ).toEqual([]);
   });
 
@@ -97,7 +100,7 @@ describe.skipIf(!store)("RedisSessionStore against a real Redis", () => {
     await store!.create("h-index-2", session({ userId, expiresAt: soon }));
 
     const indexTtl = await connection!.instance.pttl(
-      `velo:test:sessions:user:${userId}`,
+      `${KEY_PREFIX}user:${userId}`,
     );
 
     expect(indexTtl).toBeGreaterThan(500_000);
@@ -111,9 +114,9 @@ describe.skipIf(!store)("RedisSessionStore against a real Redis", () => {
     await store!.extend("h-extend", later);
 
     const found = await store!.findByTokenHash("h-extend");
-    const ttl = await connection!.instance.pttl("velo:test:sessions:h-extend");
+    const ttl = await connection!.instance.pttl(`${KEY_PREFIX}h-extend`);
     const indexTtl = await connection!.instance.pttl(
-      `velo:test:sessions:user:${entry.userId}`,
+      `${KEY_PREFIX}user:${entry.userId}`,
     );
 
     expect(found?.expiresAt).toBe(later);
@@ -166,7 +169,7 @@ describe.skipIf(!store)("RedisSessionStore against a real Redis", () => {
   });
 
   test("treats a malformed record as absent rather than throwing", async () => {
-    await connection!.instance.set("velo:test:sessions:junk", "not json");
+    await connection!.instance.set(`${KEY_PREFIX}junk`, "not json");
 
     expect(await store!.findByTokenHash("junk")).toBeNull();
   });
