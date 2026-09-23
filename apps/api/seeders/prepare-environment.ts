@@ -1,6 +1,6 @@
 import z from "zod";
 
-import { EnvSchema, NodeEnv, setEnv } from "@/configs";
+import { EnvSchema, NodeEnv, setEnv, withDerivedDefaults } from "@/configs";
 
 if (Bun.env.NODE_ENV === NodeEnv.Production) {
   console.error(
@@ -16,4 +16,4 @@ if (!parsed.success) {
   process.exit(1);
 }
 
-setEnv(parsed.data);
+setEnv(withDerivedDefaults(parsed.data));

@@ -143,6 +143,13 @@ const requireOutsideTest =
     }
   };
 
+type ParsedEnvWithDefaults = ParsedEnv & { MAIL_FROM_NAME: string };
+
+export const withDerivedDefaults = (env: ParsedEnv): ParsedEnvWithDefaults => ({
+  ...env,
+  MAIL_FROM_NAME: env.MAIL_FROM_NAME ?? env.APP_NAME,
+});
+
 const CheckedEnvSchema = EnvSchema.superRefine(
   requireOutsideTest(
     "SESSIONS_REDIS_URL",
@@ -153,10 +160,7 @@ const CheckedEnvSchema = EnvSchema.superRefine(
     "STORAGE_S3_ACCESS_KEY_ID",
     "STORAGE_S3_SECRET_ACCESS_KEY",
   ),
-).transform((env) => ({
-  ...env,
-  MAIL_FROM_NAME: env.MAIL_FROM_NAME ?? env.APP_NAME,
-}));
+).transform(withDerivedDefaults);
 
 export type Env = z.output<typeof CheckedEnvSchema>;
 
