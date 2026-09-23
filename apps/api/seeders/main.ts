@@ -1,6 +1,7 @@
 import "./prepare-environment";
 
 import { MemoryCache } from "@/adapters/cache/memory.cache";
+import { getEnv } from "@/configs";
 import { bind } from "@/core/registry";
 import { closeDatabase } from "@/db";
 import { accountsModule } from "@/modules/accounts";
@@ -12,7 +13,7 @@ import { formatReports } from "./report";
 
 usersModule.register();
 accountsModule.register();
-bind(Cache, () => new MemoryCache());
+bind(Cache, () => new MemoryCache(`${getEnv().APP_SLUG}:cache:`));
 
 try {
   console.log(formatReports(await runSeeders()));
