@@ -5,8 +5,6 @@ export enum OAuthProviderName {
   GitHub = "github",
 }
 
-export const OAUTH_TRANSACTION_COOKIE_NAME = "velo-oauth-tx";
-
 export const OAUTH_TRANSACTION_TTL_MS = 10 * MINUTE;
 
 export const OAUTH_STATE_BYTES = 32;

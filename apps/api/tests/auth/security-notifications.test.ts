@@ -8,6 +8,7 @@ import {
 } from "@tests/helpers";
 import { describe, expect, test } from "bun:test";
 
+import { getEnv } from "@/configs";
 import { OAuthProviderName } from "@/modules/oauth";
 
 const PHONE = { "user-agent": "Phone/1.0" };
@@ -81,7 +82,9 @@ describe("security notices", () => {
       email: "pat@example.test",
     });
 
-    expect(subjects("kate@example.test")).toEqual(["Verify your Velo email"]);
+    expect(subjects("kate@example.test")).toEqual([
+      `Verify your ${getEnv().APP_NAME} email`,
+    ]);
     expect(subjects("pat@example.test")).toEqual([]);
   });
 
@@ -109,7 +112,7 @@ describe("security notices", () => {
     );
 
     expect(subjects("pat@example.test")).toEqual([
-      "New sign-in to your Velo account",
+      `New sign-in to your ${getEnv().APP_NAME} account`,
     ]);
   });
 });

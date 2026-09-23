@@ -14,7 +14,11 @@ const neverAnswers = (): RedisConnection =>
 
 describe("NazliRateLimitStore", () => {
   test("fails open when Redis does not answer within the timeout", async () => {
-    const store = new NazliRateLimitStore(neverAnswers(), 20);
+    const store = new NazliRateLimitStore(
+      neverAnswers(),
+      "test:rate-limit",
+      20,
+    );
     const startedAt = Date.now();
 
     const result = await store.hit({ key: "k", limit: 5, windowMs: 1_000 });

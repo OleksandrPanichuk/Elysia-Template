@@ -2,24 +2,25 @@ import { afterAll, beforeEach, describe, expect, test } from "bun:test";
 import z from "zod";
 
 import { RedisCache } from "@/adapters/cache/redis.cache";
+import { getEnv } from "@/configs";
 import { createOwnedRedisConnection } from "@/infrastructure/redis";
 
 const url = process.env.TEST_CACHE_REDIS_URL;
+
+const KEY_PREFIX = `${getEnv().APP_SLUG}:test:cache:`;
 
 const connection = url
   ? createOwnedRedisConnection({ name: "test-cache", url })
   : undefined;
 
-const cache = connection
-  ? new RedisCache(connection, "velo:test:cache:")
-  : undefined;
+const cache = connection ? new RedisCache(connection, KEY_PREFIX) : undefined;
 
 const Shape = z.object({ id: z.string(), count: z.number() });
 
 afterAll(async () => {
   if (!connection) return;
 
-  const keys = await connection.instance.keys("velo:test:cache:*");
+  const keys = await connection.instance.keys(`${KEY_PREFIX}*`);
 
   if (keys.length > 0) await connection.instance.del(...keys);
 
@@ -28,7 +29,7 @@ afterAll(async () => {
 
 describe.skipIf(!cache)("RedisCache against a real Redis", () => {
   beforeEach(async () => {
-    const keys = await connection!.instance.keys("velo:test:cache:*");
+    const keys = await connection!.instance.keys(`${KEY_PREFIX}*`);
 
     if (keys.length > 0) await connection!.instance.del(...keys);
   });
@@ -46,7 +47,7 @@ describe.skipIf(!cache)("RedisCache against a real Redis", () => {
   test("honours the ttl it was given", async () => {
     await cache!.set("k", { id: "a", count: 1 }, { ttlMs: 30_000 });
 
-    const ttl = await connection!.instance.pttl("velo:test:cache:k");
+    const ttl = await connection!.instance.pttl(`${KEY_PREFIX}k`);
 
     expect(ttl).toBeGreaterThan(20_000);
     expect(ttl).toBeLessThanOrEqual(30_000);
@@ -54,7 +55,7 @@ describe.skipIf(!cache)("RedisCache against a real Redis", () => {
 
   test("treats a value the schema rejects as a miss", async () => {
     await connection!.instance.set(
-      "velo:test:cache:wrong",
+      `${KEY_PREFIX}wrong`,
       JSON.stringify({ id: "a", count: "not a number" }),
     );
 
@@ -62,7 +63,7 @@ describe.skipIf(!cache)("RedisCache against a real Redis", () => {
   });
 
   test("treats unparsable json as a miss", async () => {
-    await connection!.instance.set("velo:test:cache:junk", "{{{");
+    await connection!.instance.set(`${KEY_PREFIX}junk`, "{{{");
 
     expect(await cache!.get("junk", Shape)).toBeNull();
   });
@@ -80,7 +81,7 @@ describe.skipIf(!cache)("RedisCache against a real Redis", () => {
       url: "redis://127.0.0.1:59998",
       options: { maxRetriesPerRequest: 1, retryStrategy: () => null },
     });
-    const offline = new RedisCache(dead, "velo:test:cache:");
+    const offline = new RedisCache(dead, KEY_PREFIX);
 
     expect(await offline.get("k", Shape)).toBeNull();
     expect(

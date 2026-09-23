@@ -11,7 +11,6 @@ export { SessionStore, type StoredSession } from "./session.store";
 export {
   MAX_SESSIONS_PER_USER,
   MAX_USER_AGENT_LENGTH,
-  SESSION_COOKIE_NAME,
   SESSION_SLIDE_AFTER_MS,
   SESSION_TOKEN_PATTERN,
 } from "./sessions.constants";

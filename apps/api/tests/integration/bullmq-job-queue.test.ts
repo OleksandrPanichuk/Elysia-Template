@@ -3,10 +3,13 @@ import { afterAll, describe, expect, test } from "bun:test";
 import z from "zod";
 
 import { BullMqJobQueue } from "@/adapters/jobs/bullmq.job-queue";
+import { getEnv } from "@/configs";
 import { createOwnedRedisConnection } from "@/infrastructure/redis";
 import { Job } from "@/platform/jobs";
 
 const url = process.env.TEST_JOBS_REDIS_URL;
+
+const KEY_PREFIX = `${getEnv().APP_SLUG}:test:jobs`;
 
 const connection = url
   ? createOwnedRedisConnection({
@@ -17,7 +20,7 @@ const connection = url
   : undefined;
 
 const queue = connection
-  ? new BullMqJobQueue(connection, "velo:test:jobs")
+  ? new BullMqJobQueue(connection, KEY_PREFIX)
   : undefined;
 
 const PayloadSchema = z.object({ value: z.string() });
@@ -61,7 +64,7 @@ afterAll(async () => {
   await queue.close().catch(() => undefined);
 
   const keys = await connection.instance
-    .keys("velo:test:jobs*")
+    .keys(`${KEY_PREFIX}*`)
     .catch(() => [] as string[]);
 
   if (keys.length > 0) await connection.instance.del(...keys);
@@ -100,7 +103,7 @@ describe.skipIf(!queue)("BullMqJobQueue against a real Redis", () => {
 
     const inspector = new Queue("test-queue", {
       connection: connection!.instance,
-      prefix: "velo:test:jobs",
+      prefix: KEY_PREFIX,
     });
 
     try {

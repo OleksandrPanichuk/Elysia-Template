@@ -16,6 +16,15 @@ const appPath = (fallback: string) =>
     .default(fallback);
 
 export const EnvSchema = z.object({
+  APP_NAME: z.string().trim().min(1).default("App"),
+  APP_SLUG: z
+    .string()
+    .trim()
+    .regex(
+      /^[a-z0-9]+(-[a-z0-9]+)*$/,
+      "Use lowercase letters, digits and single hyphens, such as my-app",
+    )
+    .default("app"),
   NODE_ENV: z.enum(NodeEnv).default(NodeEnv.Development),
   PORT: z.coerce.number().int().positive().min(0).max(65535).default(8080),
   DATABASE_URL: z.url({ protocol: /^postgres(ql)?$/ }),
@@ -55,7 +64,6 @@ export const EnvSchema = z.object({
     .min(60)
     .max(60 * 60 * 24 * 7)
     .default(60 * 60 * 24 * 7),
-  SESSIONS_KEY_PREFIX: z.string().default("velo:sessions:"),
   APP_URL: z
     .url({ protocol: /^https?$/ })
     .default("http://localhost:3000")
@@ -86,7 +94,7 @@ export const EnvSchema = z.object({
   STORAGE_S3_ENDPOINT: z.url({ protocol: /^https?$/ }).optional(),
   STORAGE_S3_FORCE_PATH_STYLE: z.stringbool().optional(),
 
-  MAIL_FROM_NAME: z.string().trim().min(1).default("Unknown Sender"),
+  MAIL_FROM_NAME: z.string().trim().min(1).optional(),
   MAIL_FROM_ADDRESS: z.email().default("no-reply@example.com"),
   SMTP_URL: z.url({ protocol: /^smtp$/ }).optional(),
 
@@ -111,17 +119,17 @@ export const EnvSchema = z.object({
   GITHUB_CLIENT_SECRET: z.string().min(1).optional(),
 });
 
-export type Env = z.infer<typeof EnvSchema>;
+type ParsedEnv = z.infer<typeof EnvSchema>;
 
 type RequiredOutsideTestKey = NonNullable<
   {
-    [K in keyof Env]: undefined extends Env[K] ? K : never;
-  }[keyof Env]
+    [K in keyof ParsedEnv]: undefined extends ParsedEnv[K] ? K : never;
+  }[keyof ParsedEnv]
 >;
 
 const requireOutsideTest =
   (...keys: RequiredOutsideTestKey[]) =>
-  (env: Env, ctx: z.RefinementCtx): void => {
+  (env: ParsedEnv, ctx: z.RefinementCtx): void => {
     if (env.NODE_ENV === NodeEnv.Test) return;
 
     for (const key of keys) {
@@ -145,7 +153,12 @@ const CheckedEnvSchema = EnvSchema.superRefine(
     "STORAGE_S3_ACCESS_KEY_ID",
     "STORAGE_S3_SECRET_ACCESS_KEY",
   ),
-);
+).transform((env) => ({
+  ...env,
+  MAIL_FROM_NAME: env.MAIL_FROM_NAME ?? env.APP_NAME,
+}));
+
+export type Env = z.output<typeof CheckedEnvSchema>;
 
 export const loadEnv = (source: unknown = Bun.env): Env => {
   const result = CheckedEnvSchema.safeParse(source);

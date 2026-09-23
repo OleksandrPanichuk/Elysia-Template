@@ -3,8 +3,6 @@ import type { Context } from "elysia";
 import { getEnv } from "@/configs";
 import { NodeEnv } from "@/configs/env.config";
 
-import { SESSION_COOKIE_NAME } from "./sessions.constants";
-
 type CookieJar = Context["cookie"];
 
 export interface SessionCookieValue {
@@ -14,8 +12,11 @@ export interface SessionCookieValue {
 
 const isProduction = (): boolean => getEnv().NODE_ENV === NodeEnv.Production;
 
-export const getSessionCookieName = (): string =>
-  isProduction() ? `__Host-${SESSION_COOKIE_NAME}` : SESSION_COOKIE_NAME;
+export const getSessionCookieName = (): string => {
+  const name = `${getEnv().APP_SLUG}-session`;
+
+  return isProduction() ? `__Host-${name}` : name;
+};
 
 const getCookieOptions = () => ({
   httpOnly: true,

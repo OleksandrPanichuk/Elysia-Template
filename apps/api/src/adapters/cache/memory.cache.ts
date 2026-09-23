@@ -10,13 +10,21 @@ interface Entry {
 export class MemoryCache extends Cache {
   private readonly entries = new Map<string, Entry>();
 
+  constructor(private readonly keyPrefix: string) {
+    super();
+  }
+
+  public keys(): string[] {
+    return [...this.entries.keys()];
+  }
+
   public get<T>(key: string, schema: z.ZodType<T>): Promise<T | null> {
-    const entry = this.entries.get(key);
+    const entry = this.entries.get(this.key(key));
 
     if (!entry) return Promise.resolve(null);
 
     if (entry.expiresAt <= Date.now()) {
-      this.entries.delete(key);
+      this.entries.delete(this.key(key));
 
       return Promise.resolve(null);
     }
@@ -24,7 +32,7 @@ export class MemoryCache extends Cache {
     const result = schema.safeParse(JSON.parse(entry.value));
 
     if (!result.success) {
-      this.entries.delete(key);
+      this.entries.delete(this.key(key));
 
       return Promise.resolve(null);
     }
@@ -37,7 +45,7 @@ export class MemoryCache extends Cache {
     value: T,
     { ttlMs }: CacheSetOptions,
   ): Promise<void> {
-    this.entries.set(key, {
+    this.entries.set(this.key(key), {
       value: JSON.stringify(value),
       expiresAt: Date.now() + ttlMs,
     });
@@ -47,7 +55,7 @@ export class MemoryCache extends Cache {
 
   public del(...keys: string[]): Promise<void> {
     for (const key of keys) {
-      this.entries.delete(key);
+      this.entries.delete(this.key(key));
     }
 
     return Promise.resolve();
@@ -57,5 +65,9 @@ export class MemoryCache extends Cache {
     this.entries.clear();
 
     return Promise.resolve();
+  }
+
+  private key(key: string): string {
+    return `${this.keyPrefix}${key}`;
   }
 }

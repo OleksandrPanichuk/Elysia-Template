@@ -7,10 +7,7 @@ import {
   type RateLimitHitResult,
   RateLimitStore,
 } from "@/platform/rate-limit/ports/rate-limit-store";
-import {
-  RATE_LIMIT_KEY_PREFIX,
-  RATE_LIMIT_STORE_TIMEOUT_MS,
-} from "@/platform/rate-limit/rate-limit.constants";
+import { RATE_LIMIT_STORE_TIMEOUT_MS } from "@/platform/rate-limit/rate-limit.constants";
 
 type NazliStore = ReturnType<typeof redisStore>;
 
@@ -19,6 +16,7 @@ export class NazliRateLimitStore extends RateLimitStore {
 
   constructor(
     private readonly connection: RedisConnection,
+    private readonly keyPrefix: string,
     private readonly timeoutMs = RATE_LIMIT_STORE_TIMEOUT_MS,
   ) {
     super();
@@ -82,7 +80,7 @@ export class NazliRateLimitStore extends RateLimitStore {
     return (this.store ??= redisStore({
       client: this.connection.instance as never,
       adapter: "ioredis",
-      prefix: RATE_LIMIT_KEY_PREFIX,
+      prefix: this.keyPrefix,
     }));
   }
 }

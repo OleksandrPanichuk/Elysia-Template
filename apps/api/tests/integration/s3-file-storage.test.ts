@@ -119,7 +119,7 @@ describe.skipIf(!storage)("S3Storage against a real S3 API", () => {
     const missing = new S3Storage(
       new S3Connection({
         name: "test-storage-missing",
-        bucket: "velo-test-does-not-exist",
+        bucket: `${bucket}-does-not-exist`,
         region: "us-east-1",
         accessKeyId: accessKeyId!,
         secretAccessKey: secretAccessKey!,

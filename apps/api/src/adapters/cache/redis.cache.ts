@@ -8,7 +8,7 @@ import { Cache, type CacheSetOptions } from "@/platform/cache/ports/cache";
 export class RedisCache extends Cache {
   constructor(
     private readonly connection: RedisConnection,
-    private readonly keyPrefix = "velo:cache:",
+    private readonly keyPrefix: string,
   ) {
     super();
   }

@@ -38,7 +38,10 @@ export const sessionsModule = defineModule({
       },
     });
 
-    bind(SessionStore, () => new RedisSessionStore(connection));
+    bind(
+      SessionStore,
+      () => new RedisSessionStore(connection, `${env.APP_SLUG}:sessions:`),
+    );
 
     return { connection };
   },

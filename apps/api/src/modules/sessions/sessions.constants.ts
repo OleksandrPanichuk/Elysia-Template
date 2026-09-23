@@ -2,8 +2,6 @@ import { HOUR } from "@/constants";
 
 export const SESSION_TOKEN_PATTERN = /^[a-f0-9]{64}$/;
 
-export const SESSION_COOKIE_NAME = "velo-session";
-
 export const MAX_SESSIONS_PER_USER = 5;
 
 export const MAX_USER_AGENT_LENGTH = 512;
