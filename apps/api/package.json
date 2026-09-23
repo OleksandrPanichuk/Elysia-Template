@@ -10,6 +10,7 @@
     "start": "bun dist/main.js",
     "db:generate": "bunx --bun drizzle-kit generate",
     "db:migrate": "bun src/db/migrate.ts",
+    "db:seed": "bun seeders/main.ts",
     "db:studio": "bunx --bun drizzle-kit studio",
     "test": "bun test --pass-with-no-tests",
     "lint": "eslint . --max-warnings 0",

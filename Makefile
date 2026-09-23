@@ -1,5 +1,5 @@
 
-.PHONY: build test test-integration test-down logs migrate sh up up-db run-all add drop services down reset check generate db-generate db-migrate db-studio db-development db-shell
+.PHONY: build test test-integration test-down logs migrate sh up up-db run-all add drop services down reset check generate db-generate db-migrate seed db-studio db-development db-shell
 
 OPTIONAL_SERVICES := bull_board drizzle_studio
 ALL_PROFILES := $(shell echo '$(OPTIONAL_SERVICES)' | tr ' ' ',')
@@ -97,6 +97,9 @@ db-generate:
 
 db-migrate:
 	DATABASE_URL="${DB_URL}" bun run --cwd apps/api db:migrate
+
+seed:
+	DATABASE_URL="${DB_URL}" bun run --cwd apps/api db:seed
 
 db-studio:
 	bun run --cwd apps/api db:studio

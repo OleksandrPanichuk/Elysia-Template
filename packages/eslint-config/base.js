@@ -150,7 +150,12 @@ export const config = [
 
   // CLI entrypoints and scripts legitimately write to stdout.
   {
-    files: ["**/*.config.{ts,js}", "**/scripts/**", "**/db/migrate.ts"],
+    files: [
+      "**/*.config.{ts,js}",
+      "**/scripts/**",
+      "**/db/migrate.ts",
+      "**/seeders/**",
+    ],
     rules: {
       "no-console": "off",
     },
