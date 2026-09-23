@@ -5,6 +5,8 @@ export const SIGN_IN_RATE_LIMIT = {
   windowMs: 15 * MINUTE,
 } as const;
 
+export const SIGN_IN_ATTEMPTS_WITHOUT_CAPTCHA = 5;
+
 export const SIGN_IN_CLIENT_RATE_LIMIT = {
   limit: 50,
   windowMs: 15 * MINUTE,

@@ -39,3 +39,25 @@ describe("app identity in the environment", () => {
     expect(EnvSchema.shape.APP_SLUG.safeParse(slug).success).toBe(false);
   });
 });
+
+describe("captcha settings in the environment", () => {
+  test("treat empty values as unset rather than as zero or an error", () => {
+    const env = loadEnv({
+      ...base,
+      RECAPTCHA_V3_SECRET: "",
+      RECAPTCHA_V2_SECRET: " ",
+      CAPTCHA_SCORE_THRESHOLD: "",
+    });
+
+    expect(env.RECAPTCHA_V3_SECRET).toBeUndefined();
+    expect(env.RECAPTCHA_V2_SECRET).toBeUndefined();
+    expect(env.CAPTCHA_SCORE_THRESHOLD).toBe(0.5);
+  });
+
+  test("read a threshold that is set", () => {
+    expect(
+      loadEnv({ ...base, CAPTCHA_SCORE_THRESHOLD: "0.7" })
+        .CAPTCHA_SCORE_THRESHOLD,
+    ).toBe(0.7);
+  });
+});

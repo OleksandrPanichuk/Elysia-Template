@@ -7,6 +7,7 @@ import { sessionsModule } from "@/modules/sessions";
 import { usersModule } from "@/modules/users";
 import { verificationTokensModule } from "@/modules/verification-tokens";
 import { cacheModule } from "@/platform/cache";
+import { captchaModule } from "@/platform/captcha";
 import { databaseModule } from "@/platform/database";
 import { healthModule } from "@/platform/health";
 import { jobsModule } from "@/platform/jobs";
@@ -19,6 +20,7 @@ export const modules = [
   sessionsModule,
   cacheModule,
   rateLimitModule,
+  captchaModule,
   storageModule,
   notificationsModule,
   usersModule,

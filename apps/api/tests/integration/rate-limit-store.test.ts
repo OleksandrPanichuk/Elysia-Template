@@ -66,6 +66,32 @@ describe.skipIf(!store)("NazliRateLimitStore against a real Redis", () => {
     expect(ttl).toBeLessThanOrEqual(30_000);
   });
 
+  test("peeks at a counter without spending from it", async () => {
+    const rule = { key: "peeked", limit: 5, windowMs: 60_000 };
+
+    await store!.hit(rule);
+    await store!.hit(rule);
+
+    expect(await store!.peek(rule)).toBe(2);
+    expect(await store!.peek(rule)).toBe(2);
+
+    const next = await store!.hit(rule);
+
+    expect(next.remaining).toBe(2);
+  });
+
+  test("peeks at an unseen key as zero without leaving a key behind forever", async () => {
+    expect(
+      await store!.peek({ key: "unseen", limit: 5, windowMs: 60_000 }),
+    ).toBe(0);
+
+    const keys = await connection!.instance.keys(`${KEY_PREFIX}*`);
+
+    for (const key of keys) {
+      expect(await connection!.instance.pttl(key)).not.toBe(-1);
+    }
+  });
+
   test("counts each key on its own", async () => {
     const mine = `probe:${crypto.randomUUID()}`;
     const yours = `probe:${crypto.randomUUID()}`;

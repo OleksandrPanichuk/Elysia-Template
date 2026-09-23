@@ -1,4 +1,5 @@
 import { defineRoute } from "@/core/route";
+import { requireCaptcha } from "@/platform/captcha";
 
 import { MAIL_CLIENT_RATE_LIMIT, MAIL_RATE_LIMIT } from "../auth.constants";
 import { AuthMessageModel } from "../auth.model";
@@ -20,6 +21,7 @@ export const sendResetPasswordTokenRoute = ({
       },
       { ...MAIL_CLIENT_RATE_LIMIT, scope: "auth:reset-password-token:client" },
     ],
+    guards: [requireCaptcha("password_reset")],
     action: ({ body }) => sendResetPasswordToken.execute({ email: body.email }),
     postAction: () => ({ message: "ok" }),
   });

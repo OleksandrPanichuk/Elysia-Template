@@ -235,6 +235,26 @@ ignored, because anyone can send them: rate limits keyed by address would
 otherwise be defeated by varying the header, and session device information
 would record whatever the caller claimed.
 
+Sign-up, sign-in and the two token emails are protected by reCAPTCHA: v3
+(invisible, scored) first, falling back to the v2 checkbox when the score is
+low. Set `RECAPTCHA_V3_SECRET` and `RECAPTCHA_V2_SECRET` from two separate
+registrations in the reCAPTCHA admin console; `CAPTCHA_SCORE_THRESHOLD`
+defaults to 0.5. Both secrets are required in production. Without them in
+development every captcha passes and the API logs one warning at start, so a
+local frontend needs no keys.
+
+The frontend sends the token in `x-captcha-token` and says which kind it is in
+`x-captcha-kind` (`score` for v3, `challenge` for v2). A refused request
+answers 403 with one of `CAPTCHA_REQUIRED`, `CAPTCHA_CHALLENGE_REQUIRED` (show
+the v2 checkbox and resubmit) or `CAPTCHA_FAILED` (fetch a fresh token), or 503
+`CAPTCHA_UNAVAILABLE`. Tokens are single-use, so fetch a new one after every
+error. Sign-in only asks for a captcha once the address has used five
+attempts in its rate-limit window, successful ones included. Every request
+counts against the rate limits, captcha refusals too, so a person sent from
+v3 to the v2 checkbox spends two attempts. If the rate-limit store cannot be
+read, sign-in asks for a captcha from the first attempt rather than risk
+none.
+
 OAuth is optional: set `OAUTH_STATE_SECRET` (32+ characters),
 `OAUTH_REDIRECT_BASE`, and the client ID and secret for each provider you want
 (`GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`, `GITHUB_CLIENT_ID` /

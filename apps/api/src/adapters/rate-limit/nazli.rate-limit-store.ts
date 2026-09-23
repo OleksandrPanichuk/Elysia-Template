@@ -58,6 +58,30 @@ export class NazliRateLimitStore extends RateLimitStore {
     }
   }
 
+  public async peek({
+    key,
+    limit,
+    windowMs,
+  }: RateLimitHitOptions): Promise<number> {
+    try {
+      const result = await this.withinTimeout(
+        this.resolve().hit({
+          key,
+          limit,
+          window: windowMs,
+          cost: 0,
+          now: Date.now(),
+        }),
+      );
+
+      return Math.max(0, result.limit - result.remaining);
+    } catch (error) {
+      getLogger().error({ err: error, key }, "rate limit store unavailable");
+
+      return limit;
+    }
+  }
+
   private async withinTimeout<T>(operation: T | Promise<T>): Promise<T> {
     let timer: ReturnType<typeof setTimeout> | undefined;
 

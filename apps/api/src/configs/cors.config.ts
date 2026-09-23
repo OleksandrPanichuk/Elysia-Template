@@ -6,7 +6,12 @@ export const getCorsConfig = (): CORSConfig => {
   const env = getEnv();
 
   return {
-    allowedHeaders: ["Content-Type", "Authorization"],
+    allowedHeaders: [
+      "Content-Type",
+      "Authorization",
+      "x-captcha-token",
+      "x-captcha-kind",
+    ],
     exposeHeaders: [
       "x-request-id",
       "ratelimit-limit",
