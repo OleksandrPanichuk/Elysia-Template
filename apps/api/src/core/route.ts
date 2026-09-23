@@ -82,9 +82,9 @@ export type RouteGuard<
   Params extends TSchema | undefined = undefined,
   Query extends TSchema | undefined = undefined,
   Auth extends boolean = false,
-> = (context: RouteContext<Body, Params, Query, Auth>) => unknown;
+> = (context: RouteContext<Body, Params, Query, Auth>) => void | Promise<void>;
 
-interface RouteBase<
+interface RouteBaseFields<
   Body extends TSchema | undefined,
   Params extends TSchema | undefined,
   Query extends TSchema | undefined,
@@ -97,14 +97,36 @@ interface RouteBase<
   query?: Query;
   auth?: Auth;
   verifiedEmail?: boolean;
-  cache?: RouteCacheOptions<Body, Params, Query, Auth>;
   rateLimit?:
     | RouteRateLimitOptions<Body, Params, Query, Auth>
     | Array<RouteRateLimitOptions<Body, Params, Query, Auth>>;
-  guards?: Array<RouteGuard<Body, Params, Query, Auth>>;
   summary?: string;
   description?: string;
 }
+
+type RouteCacheOrGuards<
+  Body extends TSchema | undefined,
+  Params extends TSchema | undefined,
+  Query extends TSchema | undefined,
+  Auth extends boolean,
+> =
+  | {
+      cache?: RouteCacheOptions<Body, Params, Query, Auth>;
+      guards?: undefined;
+    }
+  | {
+      cache?: undefined;
+      guards?: Array<RouteGuard<Body, Params, Query, Auth>>;
+    };
+
+type RouteBase<
+  Body extends TSchema | undefined,
+  Params extends TSchema | undefined,
+  Query extends TSchema | undefined,
+  Response extends TSchema,
+  Auth extends boolean,
+> = RouteBaseFields<Body, Params, Query, Response, Auth> &
+  RouteCacheOrGuards<Body, Params, Query, Auth>;
 
 export interface RouteDetail {
   summary?: string;
@@ -197,7 +219,17 @@ export function defineRoute(
     description,
   } = definition;
 
+  if (cache && guards) {
+    throw new TypeError(
+      "A route cannot combine cache with guards: a cache hit answers before the guards run",
+    );
+  }
+
   const handler = async (context: RawContext): Promise<Static<TSchema>> => {
+    for (const guard of guards ?? []) {
+      await guard(context as ActionContext);
+    }
+
     const output = await action(context as ActionContext);
 
     return postAction
@@ -212,7 +244,6 @@ export function defineRoute(
     ...(body ? { body } : {}),
     ...(params ? { params } : {}),
     ...(query ? { query } : {}),
-    ...(guards?.length ? { beforeHandle: guards } : {}),
     ...(auth ? { auth: true as const } : {}),
     ...(verifiedEmail ? { verifiedEmail: true as const } : {}),
     ...(cache

@@ -1,3 +1,6 @@
+import { MEMORY_CAPTCHA_TOKENS } from "@/adapters/captcha/memory.captcha-verifier";
+import { CAPTCHA_KIND_HEADER, CAPTCHA_TOKEN_HEADER } from "@/platform/captcha";
+
 import { getApp } from "./app";
 
 const ORIGIN = "http://localhost:3000";
@@ -44,7 +47,18 @@ const parse = async (response: globalThis.Response): Promise<unknown> => {
   return response.text().catch(() => null);
 };
 
-export const createClient = (): TestClient => {
+export interface ClientOptions {
+  captcha?: boolean;
+}
+
+const PASSING_CAPTCHA: RequestHeaders = {
+  [CAPTCHA_TOKEN_HEADER]: MEMORY_CAPTCHA_TOKENS.pass,
+  [CAPTCHA_KIND_HEADER]: "score",
+};
+
+export const createClient = ({
+  captcha = true,
+}: ClientOptions = {}): TestClient => {
   const jar = new Map<string, string>();
 
   const remember = (response: globalThis.Response): void => {
@@ -79,6 +93,7 @@ export const createClient = (): TestClient => {
           origin: ORIGIN,
           ...(cookie ? { cookie } : {}),
           ...(body === undefined ? {} : { "content-type": "application/json" }),
+          ...(captcha ? PASSING_CAPTCHA : {}),
           ...headers,
         },
         ...(body === undefined ? {} : { body: JSON.stringify(body) }),

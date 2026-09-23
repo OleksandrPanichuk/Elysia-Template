@@ -15,6 +15,9 @@ const appPath = (fallback: string) =>
     .regex(/^\/[^\s?#]*$/, "Use an absolute path such as /verify-email")
     .default(fallback);
 
+const emptyAsUnset = (value: unknown): unknown =>
+  typeof value === "string" && value.trim() === "" ? undefined : value;
+
 export const EnvSchema = z.object({
   APP_NAME: z.string().trim().min(1).default("App"),
   APP_SLUG: z
@@ -93,6 +96,13 @@ export const EnvSchema = z.object({
   STORAGE_S3_SECRET_ACCESS_KEY: z.string().min(1).optional(),
   STORAGE_S3_ENDPOINT: z.url({ protocol: /^https?$/ }).optional(),
   STORAGE_S3_FORCE_PATH_STYLE: z.stringbool().optional(),
+
+  RECAPTCHA_V3_SECRET: z.preprocess(emptyAsUnset, z.string().min(1).optional()),
+  RECAPTCHA_V2_SECRET: z.preprocess(emptyAsUnset, z.string().min(1).optional()),
+  CAPTCHA_SCORE_THRESHOLD: z.preprocess(
+    emptyAsUnset,
+    z.coerce.number().min(0).max(1).default(0.5),
+  ),
 
   MAIL_FROM_NAME: z.string().trim().min(1).optional(),
   MAIL_FROM_ADDRESS: z.email().default("no-reply@example.com"),

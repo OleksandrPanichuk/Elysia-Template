@@ -8,6 +8,7 @@ import { getClientIp } from "@/shared";
 
 import { type RateLimitHitResult, RateLimitStore } from "./ports";
 import { RateLimitExceededError } from "./rate-limit.errors";
+import { rateLimitStoreKey } from "./rate-limit.keys";
 
 interface RateLimitContext {
   request: Request;
@@ -32,7 +33,7 @@ const rateLimitKey = (
   const scope = rule.scope ?? context.path;
   const subject = rule.key?.(context as never) ?? defaultKey(context);
 
-  return `${scope}|${subject}`;
+  return rateLimitStoreKey(scope, subject);
 };
 
 const hit = (

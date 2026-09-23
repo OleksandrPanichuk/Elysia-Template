@@ -1,4 +1,5 @@
 import { defineRoute } from "@/core/route";
+import { requireCaptcha } from "@/platform/captcha";
 
 import { MAIL_CLIENT_RATE_LIMIT, MAIL_RATE_LIMIT } from "../auth.constants";
 import { AuthMessageModel } from "../auth.model";
@@ -23,6 +24,7 @@ export const sendEmailVerificationTokenRoute = ({
         scope: "auth:email-verification-token:client",
       },
     ],
+    guards: [requireCaptcha("email_verification")],
     action: ({ body }) =>
       sendEmailVerificationToken.execute({ email: body.email }),
     postAction: () => ({ message: "ok" }),

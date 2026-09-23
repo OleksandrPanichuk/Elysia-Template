@@ -4,7 +4,11 @@ import type { OAuthProviderName } from "@/modules/oauth";
 import { getOAuthProvider } from "@/modules/oauth";
 import { UsersService } from "@/modules/users";
 
-import { createClient, type TestClient } from "./create-client";
+import {
+  type ClientOptions,
+  createClient,
+  type TestClient,
+} from "./create-client";
 import { inbox } from "./inbox";
 
 export interface UserInput {
@@ -25,7 +29,8 @@ const nextEmail = (): string => `user${++counter}@example.test`;
 
 export const DEFAULT_PASSWORD = "test-password-123";
 
-export const createGuest = (): TestClient => createClient();
+export const createGuest = (options?: ClientOptions): TestClient =>
+  createClient(options);
 
 export const createUser = async (input: UserInput = {}): Promise<TestUser> => {
   const email = input.email ?? nextEmail();

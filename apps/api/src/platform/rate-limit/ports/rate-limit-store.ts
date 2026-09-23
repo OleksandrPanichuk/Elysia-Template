@@ -16,6 +16,8 @@ export abstract class RateLimitStore {
     options: RateLimitHitOptions,
   ): Promise<RateLimitHitResult>;
 
+  public abstract peek(options: RateLimitHitOptions): Promise<number>;
+
   public close(): Promise<void> {
     return Promise.resolve();
   }

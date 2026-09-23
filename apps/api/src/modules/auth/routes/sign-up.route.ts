@@ -1,5 +1,6 @@
 import { defineRoute } from "@/core/route";
 import { writeSessionCookie } from "@/modules/sessions";
+import { requireCaptcha } from "@/platform/captcha";
 import { getClientInfo } from "@/shared";
 
 import { SIGN_UP_RATE_LIMIT } from "../auth.constants";
@@ -13,6 +14,7 @@ export const signUpRoute = ({ signUp }: AuthActions) =>
     response: AuthSessionModel,
     summary: "Sign up",
     rateLimit: { ...SIGN_UP_RATE_LIMIT, scope: "auth:sign-up" },
+    guards: [requireCaptcha("sign_up")],
 
     action: ({ body, request, server }) =>
       signUp.execute({

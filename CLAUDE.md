@@ -165,6 +165,13 @@ export const cacheModule = defineModule({
   `verifiedEmail`), mounted by `createApp` before any route. A macro's hooks run
   in the order of the keys `defineRoute` puts on the route, not in module order,
   so module order is free to follow start-up dependencies alone.
+- **`guards`** on `defineRoute` run inside the handler, after every macro and
+  before `action`, so a request the rate limiter refuses never reaches them,
+  and on an `auth` route they see `user`. Reach for a guard for a per-route
+  check such as `requireCaptcha("sign_up")`; a guard throws to refuse, and its
+  return value is ignored. A route cannot have both `guards` and `cache`: a
+  cache hit answers from a macro, before the handler, and would skip the
+  guards. The types refuse the combination and `defineRoute` throws on it.
 - **`register`** — declare intent, never do I/O. Construct adapters and
   connections, `bind` ports, `registerJob`, and return state. It must be
   synchronous (the type system enforces this), so anything that awaits belongs

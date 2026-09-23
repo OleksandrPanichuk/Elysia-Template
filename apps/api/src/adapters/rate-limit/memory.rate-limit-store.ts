@@ -35,6 +35,14 @@ export class MemoryRateLimitStore extends RateLimitStore {
     });
   }
 
+  public peek({ key }: RateLimitHitOptions): Promise<number> {
+    const current = this.windows.get(key);
+
+    return Promise.resolve(
+      current && current.resetAt > Date.now() ? current.count : 0,
+    );
+  }
+
   public clear(): void {
     this.windows.clear();
   }

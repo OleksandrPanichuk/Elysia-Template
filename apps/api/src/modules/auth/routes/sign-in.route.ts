@@ -3,6 +3,11 @@ import { writeSessionCookie } from "@/modules/sessions";
 import { getClientInfo } from "@/shared";
 
 import {
+  requireSignInCaptcha,
+  SIGN_IN_ADDRESS_SCOPE,
+  signInAddressKey,
+} from "../auth.captcha";
+import {
   SIGN_IN_CLIENT_RATE_LIMIT,
   SIGN_IN_RATE_LIMIT,
 } from "../auth.constants";
@@ -18,11 +23,12 @@ export const signInRoute = ({ signIn }: AuthActions) =>
     rateLimit: [
       {
         ...SIGN_IN_RATE_LIMIT,
-        scope: "auth:sign-in",
-        key: ({ body }) => `email:${body.email.trim().toLowerCase()}`,
+        scope: SIGN_IN_ADDRESS_SCOPE,
+        key: signInAddressKey,
       },
       { ...SIGN_IN_CLIENT_RATE_LIMIT, scope: "auth:sign-in:client" },
     ],
+    guards: [requireSignInCaptcha],
 
     action: ({ body, request, server }) =>
       signIn.execute({

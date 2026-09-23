@@ -1,5 +1,10 @@
 export { getApp } from "./app";
-export { createClient, type Response, type TestClient } from "./create-client";
+export {
+  type ClientOptions,
+  createClient,
+  type Response,
+  type TestClient,
+} from "./create-client";
 export {
   completeOAuth,
   createGuest,
