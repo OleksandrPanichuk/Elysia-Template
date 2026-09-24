@@ -120,6 +120,14 @@ inside its module under `repositories/`, because it is bound to that module's
 schema and Postgres is the system of record, not a swappable backend.
 Everything else that implements a port over an external system is an adapter.
 
+Every port is an abstract class that extends `Port` from `@/core/port`;
+`Repository` does too, so every repository port is one. `make()` refuses a
+port that has no binding and throws naming it, rather than building an empty
+object whose methods fail later. Bind each port in its module's `register()`,
+and register the modules before anything resolves a port: `createApp` and
+`createOpenApiApp` both do. Plain classes such as services and use cases need
+no binding and are built on first use.
+
 Ports live in `modules/<name>/ports/` once a module has more than one.
 An adapter imports the port file directly (`@/modules/x/ports/y`), never the
 module barrel: the barrel exports the module definition, which imports the

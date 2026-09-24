@@ -1,3 +1,4 @@
+import { Port } from "./port";
 import type { Repository } from "./repository";
 import type { Service } from "./service";
 import type { UseCase } from "./use-case";
@@ -12,6 +13,9 @@ const resolving = new Set<Token<unknown>>();
 
 const nameOf = (token: Token<unknown>) => token.name || "anonymous";
 
+const isPort = (token: Token<unknown>): boolean =>
+  token === Port || token.prototype instanceof Port;
+
 export const make = <T>(token: Token<T>): T => {
   if (instances.has(token)) return instances.get(token) as T;
 
@@ -25,6 +29,15 @@ export const make = <T>(token: Token<T>): T => {
   resolving.add(token);
   try {
     const factory = factories.get(token);
+
+    if (!factory && isPort(token)) {
+      throw new Error(
+        `"${nameOf(token)}" is a port with no binding. ` +
+          `Bind an adapter to it in its module's register(), ` +
+          `and register the module before anything resolves it.`,
+      );
+    }
+
     const instance = factory
       ? (factory() as T)
       : new (token as Instantiable<T>)();

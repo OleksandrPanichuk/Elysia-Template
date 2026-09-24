@@ -1,7 +1,9 @@
+import { Port } from "@/core/port";
+
 import type { Job } from "../job";
 import type { EnqueueJobOptions } from "../job.typedefs";
 
-export abstract class JobQueue {
+export abstract class JobQueue extends Port {
   public abstract enqueue<T>(
     job: Job<T>,
     payload: T,

@@ -1,10 +1,12 @@
 import type z from "zod";
 
+import { Port } from "@/core/port";
+
 export interface CacheSetOptions {
   ttlMs: number;
 }
 
-export abstract class Cache {
+export abstract class Cache extends Port {
   public abstract get<T>(key: string, schema: z.ZodType<T>): Promise<T | null>;
 
   public abstract set<T>(

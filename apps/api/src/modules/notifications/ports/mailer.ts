@@ -1,3 +1,5 @@
+import { Port } from "@/core/port";
+
 export interface EmailRecipient {
   userId?: string;
   name?: string;
@@ -11,7 +13,7 @@ export interface EmailMessage {
   text: string;
 }
 
-export abstract class Mailer {
+export abstract class Mailer extends Port {
   public abstract send(message: EmailMessage): Promise<void>;
 
   public verify(): Promise<void> {

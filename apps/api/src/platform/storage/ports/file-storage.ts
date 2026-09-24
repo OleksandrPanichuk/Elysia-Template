@@ -1,3 +1,5 @@
+import { Port } from "@/core/port";
+
 export type FileBody = string | ArrayBuffer | Uint8Array | Blob;
 
 export interface PutFileOptions {
@@ -18,7 +20,7 @@ export interface SignedUrlOptions {
   contentType?: string;
 }
 
-export abstract class FileStorage {
+export abstract class FileStorage extends Port {
   public abstract put(
     key: string,
     body: FileBody,

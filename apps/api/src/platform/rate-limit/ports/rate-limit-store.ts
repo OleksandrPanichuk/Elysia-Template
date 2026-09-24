@@ -1,3 +1,5 @@
+import { Port } from "@/core/port";
+
 export interface RateLimitHitOptions {
   key: string;
   limit: number;
@@ -11,7 +13,7 @@ export interface RateLimitHitResult {
   resetAt: number;
 }
 
-export abstract class RateLimitStore {
+export abstract class RateLimitStore extends Port {
   public abstract hit(
     options: RateLimitHitOptions,
   ): Promise<RateLimitHitResult>;

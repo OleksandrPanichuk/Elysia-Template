@@ -1,3 +1,4 @@
+import { Port } from "@/core/port";
 import { make } from "@/core/registry";
 import { getRequestContext } from "@/shared";
 
@@ -9,7 +10,7 @@ export interface ErrorReport {
   extra?: Readonly<Record<string, unknown>>;
 }
 
-export abstract class ErrorReporter {
+export abstract class ErrorReporter extends Port {
   public abstract report(error: unknown, report: ErrorReport): void;
 
   public start(): Promise<void> {
