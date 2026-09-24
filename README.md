@@ -165,11 +165,12 @@ make gen resource invoices ARGS="--db mongo --dry-run"
 ```
 
 A **resource** is a module with an entity, a model, create and update DTOs, a
-repository port and its adapter, a service, five use cases (create, get, list,
+repository port and its adapter, a service, four use cases (create, get,
 update, delete), their routes, and the module definition, registered before
 `jobsModule`. Every route needs a session and every query is scoped to the
 signed-in user through an `ownerId` column, so one user never sees another's
-records. Pass the plural; the singular is guessed, and `--singular` overrides
+records. There is no list endpoint yet: it waits for a shared pagination
+primitive, so that every resource lists the same way. Pass the plural; the singular is guessed, and `--singular` overrides
 it (`gen resource people --singular person`).
 
 The repository adapter follows `DATABASE_ADAPTER` in the root `.env` (see
