@@ -47,7 +47,7 @@ describe("planResource", () => {
       "create src/modules/line-items/line-item.entity.ts",
       "create src/modules/line-items/line-items.repository.ts",
       "create src/modules/line-items/repositories/line-items.postgres.repository.ts",
-      "create src/modules/line-items/use-cases/list-line-items.ts",
+      "create src/modules/line-items/use-cases/get-line-item.ts",
       "create src/modules/line-items/routes/update-line-item.route.ts",
       "create src/modules/line-items/line-items.module.ts",
       "edit src/app.modules.ts",
@@ -60,10 +60,17 @@ describe("planResource", () => {
     expect(postgres.migration).toBe("create_line_items");
   });
 
+  test("generates no list endpoint", () => {
+    expect(paths(postgres).some((path) => path.includes("list-"))).toBe(false);
+    expect(created(postgres, "line-items.routes.ts")).not.toContain('.get("/"');
+  });
+
   test("scopes every query to the owner", () => {
     const repository = created(postgres, "line-items.postgres.repository.ts");
 
-    expect(repository).toContain("eq(lineItemsSchema.ownerId, ownerId)");
+    expect(repository).toContain(
+      "and(eq(lineItemsSchema.id, id), eq(lineItemsSchema.ownerId, ownerId))",
+    );
     expect(created(postgres, "line_items.schema.ts")).toContain(
       `pgTable(\n  "line_items"`,
     );

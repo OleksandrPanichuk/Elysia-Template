@@ -38,10 +38,6 @@ export class ${s.pascal}Entity {
       updatedAt: entity.updatedAt.toISOString(),
     };
   }
-
-  public static normalizeMany(entities: ${s.pascal}Entity[]): ${s.pascal}Model[] {
-    return entities.map((entity) => ${s.pascal}Entity.normalize(entity));
-  }
 }
 `;
 
@@ -114,8 +110,6 @@ export abstract class ${p.pascal}Repository extends Repository {
     ownerId: string,
   ): Promise<${s.pascal}Entity | null>;
 
-  public abstract listOwned(ownerId: string): Promise<${s.pascal}Entity[]>;
-
   public abstract updateOwned(
     id: string,
     ownerId: string,
@@ -131,7 +125,7 @@ export const postgresRepositoryFile = (context: ResourceContext): string => {
   const table = `${p.camel}Schema`;
 
   return `
-import { and, desc, eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 
 import { ${table} } from "@/db";
 import { type DBExecutor, getExecutor } from "@/db/executor";
@@ -169,14 +163,6 @@ export class ${repositoryClass(context)} extends ${p.pascal}Repository {
       .limit(1);
 
     return row ?? null;
-  }
-
-  public listOwned(ownerId: string): Promise<${s.pascal}Entity[]> {
-    return this.db
-      .select()
-      .from(${table})
-      .where(eq(${table}.ownerId, ownerId))
-      .orderBy(desc(${table}.createdAt));
   }
 
   public async updateOwned(
@@ -233,10 +219,6 @@ export class ${name} extends ${p.pascal}Repository {
     _ownerId: string,
   ): Promise<${s.pascal}Entity | null> {
     return ${pending("findOwned")};
-  }
-
-  public listOwned(_ownerId: string): Promise<${s.pascal}Entity[]> {
-    return ${pending("listOwned")};
   }
 
   public updateOwned(
@@ -348,32 +330,6 @@ export class Get${s.pascal}UseCase extends UseCase<Options, Result> {
 }
 `;
 
-export const listUseCaseFile = ({
-  singular: s,
-  plural: p,
-}: ResourceContext): string => `
-import { makeRepository } from "@/core/registry";
-import { UseCase } from "@/core/use-case";
-
-import type { ${s.pascal}Entity } from "../${s.kebab}.entity";
-import { ${p.pascal}Repository } from "../${p.kebab}.repository";
-
-export interface List${p.pascal}UseCaseOptions {
-  ownerId: string;
-}
-
-type Options = List${p.pascal}UseCaseOptions;
-type Result = ${s.pascal}Entity[];
-
-export class List${p.pascal}UseCase extends UseCase<Options, Result> {
-  private readonly repository = makeRepository(${p.pascal}Repository);
-
-  public execute({ ownerId }: Options): Promise<Result> {
-    return this.repository.listOwned(ownerId);
-  }
-}
-`;
-
 export const updateUseCaseFile = ({
   singular: s,
   plural: p,
@@ -442,10 +398,7 @@ export class Delete${s.pascal}UseCase extends UseCase<Options, Result> {
 }
 `;
 
-export const useCasesIndexFile = ({
-  singular: s,
-  plural: p,
-}: ResourceContext): string => `
+export const useCasesIndexFile = ({ singular: s }: ResourceContext): string => `
 export {
   Create${s.pascal}UseCase,
   type Create${s.pascal}UseCaseOptions,
@@ -458,10 +411,6 @@ export {
   Get${s.pascal}UseCase,
   type Get${s.pascal}UseCaseOptions,
 } from "./get-${s.kebab}";
-export {
-  List${p.pascal}UseCase,
-  type List${p.pascal}UseCaseOptions,
-} from "./list-${p.kebab}";
 export {
   Update${s.pascal}UseCase,
   type Update${s.pascal}UseCaseOptions,
@@ -516,29 +465,6 @@ export const get${s.pascal}Route = ({ get${s.pascal} }: ${p.pascal}Actions) =>
     action: ({ params, user }) =>
       get${s.pascal}.execute({ ownerId: user.id, id: params.id }),
     postAction: ({ output }) => ${s.pascal}Entity.normalize(output),
-  });
-`;
-
-export const listRouteFile = ({
-  singular: s,
-  plural: p,
-}: ResourceContext): string => `
-import { t } from "elysia";
-
-import { defineRoute } from "@/core/route";
-
-import { ${s.pascal}Entity } from "../${s.kebab}.entity";
-import { ${s.pascal}Model } from "../${s.kebab}.model";
-import type { ${p.pascal}Actions } from "../${p.kebab}.routes";
-
-export const list${p.pascal}Route = ({ list${p.pascal} }: ${p.pascal}Actions) =>
-  defineRoute({
-    response: t.Array(${s.pascal}Model),
-    summary: "List your ${human(p)}",
-    auth: true,
-
-    action: ({ user }) => list${p.pascal}.execute({ ownerId: user.id }),
-    postAction: ({ output }) => ${s.pascal}Entity.normalizeMany(output),
   });
 `;
 
@@ -597,14 +523,10 @@ export const delete${s.pascal}Route = ({ delete${s.pascal} }: ${p.pascal}Actions
   });
 `;
 
-export const routesIndexFile = ({
-  singular: s,
-  plural: p,
-}: ResourceContext): string => `
+export const routesIndexFile = ({ singular: s }: ResourceContext): string => `
 export { create${s.pascal}Route } from "./create-${s.kebab}.route";
 export { delete${s.pascal}Route } from "./delete-${s.kebab}.route";
 export { get${s.pascal}Route } from "./get-${s.kebab}.route";
-export { list${p.pascal}Route } from "./list-${p.kebab}.route";
 export { update${s.pascal}Route } from "./update-${s.kebab}.route";
 `;
 
@@ -620,28 +542,24 @@ import {
   create${s.pascal}Route,
   delete${s.pascal}Route,
   get${s.pascal}Route,
-  list${p.pascal}Route,
   update${s.pascal}Route,
 } from "./routes";
 import type {
   Create${s.pascal}UseCase,
   Delete${s.pascal}UseCase,
   Get${s.pascal}UseCase,
-  List${p.pascal}UseCase,
   Update${s.pascal}UseCase,
 } from "./use-cases";
 
 export interface ${p.pascal}Actions {
   create${s.pascal}: Executable<Create${s.pascal}UseCase>;
   get${s.pascal}: Executable<Get${s.pascal}UseCase>;
-  list${p.pascal}: Executable<List${p.pascal}UseCase>;
   update${s.pascal}: Executable<Update${s.pascal}UseCase>;
   delete${s.pascal}: Executable<Delete${s.pascal}UseCase>;
 }
 
 export const ${p.camel}Routes = (actions: ${p.pascal}Actions) =>
   new Elysia({ name: "${p.kebab}", prefix: "/${p.kebab}" })
-    .get("/", ...list${p.pascal}Route(actions))
     .post("/", ...create${s.pascal}Route(actions))
     .get("/:id", ...get${s.pascal}Route(actions))
     .patch("/:id", ...update${s.pascal}Route(actions))
@@ -662,7 +580,6 @@ import {
   Create${s.pascal}UseCase,
   Delete${s.pascal}UseCase,
   Get${s.pascal}UseCase,
-  List${p.pascal}UseCase,
   Update${s.pascal}UseCase,
 } from "./use-cases";
 
@@ -677,7 +594,6 @@ export const ${p.camel}Module = defineModule({
     ${p.camel}Routes({
       create${s.pascal}: makeUseCase(Create${s.pascal}UseCase),
       get${s.pascal}: makeUseCase(Get${s.pascal}UseCase),
-      list${p.pascal}: makeUseCase(List${p.pascal}UseCase),
       update${s.pascal}: makeUseCase(Update${s.pascal}UseCase),
       delete${s.pascal}: makeUseCase(Delete${s.pascal}UseCase),
     }),
@@ -752,7 +668,7 @@ interface ${s.pascal}Body {
 const PATH = "/api/${p.kebab}";
 
 describe("${human(p)}", () => {
-  test("creates, reads, lists, updates and deletes one", async () => {
+  test("creates, reads, updates and deletes one", async () => {
     const user = await createUser();
 
     const created = await user.post<${s.pascal}Body>(PATH, { name: "First" });
@@ -763,10 +679,6 @@ describe("${human(p)}", () => {
     const path = \`\${PATH}/\${created.body.id}\`;
 
     expect((await user.get<${s.pascal}Body>(path)).body.name).toBe("First");
-
-    const listed = await user.get<${s.pascal}Body[]>(PATH);
-
-    expect(listed.body.map(({ id }) => id)).toEqual([created.body.id]);
 
     const updated = await user.patch<${s.pascal}Body>(path, { name: "Renamed" });
 
@@ -787,12 +699,13 @@ describe("${human(p)}", () => {
     expect((await other.get(path)).status).toBe(404);
     expect((await other.patch(path, { name: "Theirs" })).status).toBe(404);
     expect((await other.delete(path)).status).toBe(404);
-    expect((await other.get<${s.pascal}Body[]>(PATH)).body).toEqual([]);
     expect((await owner.get<${s.pascal}Body>(path)).body.name).toBe("Mine");
   });
 
   test("refuses a guest", async () => {
-    expect((await createGuest().get(PATH)).status).toBe(401);
+    const path = \`\${PATH}/\${crypto.randomUUID()}\`;
+
+    expect((await createGuest().get(path)).status).toBe(401);
   });
 
   test("refuses an empty name", async () => {

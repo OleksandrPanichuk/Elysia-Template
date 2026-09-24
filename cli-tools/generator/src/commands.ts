@@ -149,10 +149,6 @@ export const planResource = (
       resource.getUseCaseFile(context),
     ),
     create(
-      at("use-cases", `list-${p.kebab}.ts`),
-      resource.listUseCaseFile(context),
-    ),
-    create(
       at("use-cases", `update-${s.kebab}.ts`),
       resource.updateUseCaseFile(context),
     ),
@@ -168,10 +164,6 @@ export const planResource = (
     create(
       at("routes", `get-${s.kebab}.route.ts`),
       resource.getRouteFile(context),
-    ),
-    create(
-      at("routes", `list-${p.kebab}.route.ts`),
-      resource.listRouteFile(context),
     ),
     create(
       at("routes", `update-${s.kebab}.route.ts`),
