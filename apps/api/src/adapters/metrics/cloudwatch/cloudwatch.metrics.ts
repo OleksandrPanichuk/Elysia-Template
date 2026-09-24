@@ -7,69 +7,27 @@ import {
 
 import { getLogger } from "@/infrastructure";
 import {
-  CLOUDWATCH_MAX_METRICS_PER_REQUEST,
-  CLOUDWATCH_REQUEST_TIMEOUT_MS,
-} from "@/platform/metrics/metrics.constants";
-import {
   type JobMeasurement,
   Metrics,
   type RequestMeasurement,
 } from "@/platform/metrics/ports/metrics";
 
-export interface MetricsSender {
-  send(command: PutMetricDataCommand): Promise<unknown>;
-}
-
-export interface CloudWatchMetricsOptions {
-  namespace: string;
-  environment: string;
-  flushIntervalMs: number;
-  client?: MetricsSender;
-  now?: () => Date;
-}
-
-interface Aggregate {
-  name: string;
-  unit: StandardUnit;
-  dimensions: Record<string, string>;
-  count: number;
-  sum: number;
-  min: number;
-  max: number;
-}
-
-const statusClass = (status: number): string => `${Math.floor(status / 100)}xx`;
-
-const aggregateKey = (
-  name: string,
-  dimensions: Record<string, string>,
-): string => `${name}|${JSON.stringify(Object.entries(dimensions))}`;
-
-const toDatum = (aggregate: Aggregate, timestamp: Date): MetricDatum => ({
-  MetricName: aggregate.name,
-  Unit: aggregate.unit,
-  Timestamp: timestamp,
-  Dimensions: Object.entries(aggregate.dimensions).map(([name, value]) => ({
-    Name: name,
-    Value: value,
-  })),
-  StatisticValues: {
-    SampleCount: aggregate.count,
-    Sum: aggregate.sum,
-    Minimum: aggregate.min,
-    Maximum: aggregate.max,
-  },
-});
-
-const chunk = <T>(items: readonly T[], size: number): T[][] => {
-  const chunks: T[][] = [];
-
-  for (let index = 0; index < items.length; index += size) {
-    chunks.push(items.slice(index, index + size));
-  }
-
-  return chunks;
-};
+import {
+  CLOUDWATCH_MAX_METRICS_PER_REQUEST,
+  CLOUDWATCH_REQUEST_TIMEOUT_MS,
+} from "./cloudwatch.constants";
+import {
+  aggregateKey,
+  chunk,
+  statusClass,
+  toDatum,
+} from "./cloudwatch.helpers";
+import type {
+  Aggregate,
+  CloudWatchMetricsOptions,
+  Dimensions,
+  MetricsSender,
+} from "./cloudwatch.typedefs";
 
 export class CloudWatchMetrics extends Metrics {
   private readonly client: MetricsSender;
@@ -157,7 +115,7 @@ export class CloudWatchMetrics extends Metrics {
   private add(
     name: string,
     unit: StandardUnit,
-    dimensions: Record<string, string>,
+    dimensions: Dimensions,
     value: number,
   ): void {
     const key = aggregateKey(name, dimensions);

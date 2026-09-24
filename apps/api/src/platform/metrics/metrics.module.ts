@@ -1,4 +1,4 @@
-import { CloudWatchMetrics } from "@/adapters/metrics/cloudwatch.metrics";
+import { CloudWatchMetrics } from "@/adapters/metrics/cloudwatch";
 import { MemoryMetrics } from "@/adapters/metrics/memory.metrics";
 import { NoopMetrics } from "@/adapters/metrics/noop.metrics";
 import { NodeEnv } from "@/configs";

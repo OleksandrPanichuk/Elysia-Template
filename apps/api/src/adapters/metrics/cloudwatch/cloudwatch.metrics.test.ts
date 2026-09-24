@@ -1,9 +1,9 @@
 import type { PutMetricDataCommand } from "@aws-sdk/client-cloudwatch";
 import { describe, expect, test } from "bun:test";
 
-import { CLOUDWATCH_MAX_METRICS_PER_REQUEST } from "@/platform/metrics";
-
-import { CloudWatchMetrics, type MetricsSender } from "./cloudwatch.metrics";
+import { CLOUDWATCH_MAX_METRICS_PER_REQUEST } from "./cloudwatch.constants";
+import { CloudWatchMetrics } from "./cloudwatch.metrics";
+import type { MetricsSender } from "./cloudwatch.typedefs";
 
 const NOW = new Date("2026-09-24T12:00:00.000Z");
 

@@ -99,6 +99,17 @@ adapters/cache/      redis.cache.ts        memory.cache.ts
 adapters/storage/    s3.storage.ts         memory.storage.ts
 ```
 
+An adapter that outgrows one file gets a folder named after the technology,
+with the class alone in `<tech>.<port>.ts` and its pieces beside it:
+`<tech>.typedefs.ts`, `<tech>.helpers.ts`, `<tech>.constants.ts`, and an
+`index.ts` the module definition imports. Constants that only the adapter
+needs, such as a vendor's request limits, live there and not in the platform
+folder:
+
+```
+adapters/metrics/    cloudwatch/    memory.metrics.ts    noop.metrics.ts
+```
+
 Siblings in one folder are the alternatives you pick between in `register()`,
 which is the question you actually ask when reading them. Grouping by
 technology breaks down immediately: `memory.*` and `log.*` adapters use no
