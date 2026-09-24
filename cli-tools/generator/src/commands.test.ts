@@ -108,6 +108,15 @@ describe("planResource", () => {
 });
 
 describe("planModule", () => {
+  test("goes ahead over an empty folder but not over a module", () => {
+    const folderOnly = (path: string): boolean => path === moduleDir("billing");
+
+    expect(() => planModule("billing", folderOnly)).not.toThrow();
+    expect(() => planModule("billing", onlyModule("billing"))).toThrow(
+      /already exists/,
+    );
+  });
+
   test("creates the module and registers it", () => {
     expect(paths(planModule("billing", nothingExists))).toEqual([
       "create src/modules/billing/billing.module.ts",

@@ -60,7 +60,7 @@ export const planModule = (name: string, exists: Exists): Plan => {
   const module = namesOf(name);
   const dir = moduleDir(module.kebab);
 
-  if (exists(dir)) {
+  if (exists(join(dir, "index.ts"))) {
     throw new Error(`Module "${module.kebab}" already exists at ${dir}`);
   }
 
@@ -106,7 +106,7 @@ export const planResource = (
   const { plural: p, singular: s, adapter } = context;
   const dir = moduleDir(p.kebab);
 
-  if (exists(dir)) {
+  if (exists(join(dir, "index.ts"))) {
     throw new Error(`Module "${p.kebab}" already exists at ${dir}`);
   }
 

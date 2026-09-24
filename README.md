@@ -156,6 +156,14 @@ bun run gen plugin audit-trail              # src/plugins, exported from the ind
 bun run gen resource invoices --dry-run     # print the plan, write nothing
 ```
 
+`make gen` takes the same words. Flags go in `ARGS`, because `make` reads
+anything starting with `--` as its own option:
+
+```sh
+make gen resource invoices
+make gen resource invoices ARGS="--db mongo --dry-run"
+```
+
 A **resource** is a module with an entity, a model, create and update DTOs, a
 repository port and its adapter, a service, five use cases (create, get, list,
 update, delete), their routes, and the module definition, registered before
