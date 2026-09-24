@@ -83,21 +83,21 @@ services:
       retries: 15
 
   storage_test:
-    image: quay.io/minio/minio:latest
+    image: rustfs/rustfs:latest
     profiles: [integration]
     entrypoint:
       - sh
       - -c
-      - mkdir -p /data/test-bucket && exec minio server /data
+      - mkdir -p /data/test-bucket && exec /entrypoint.sh rustfs
     environment:
-      - MINIO_ROOT_USER=minioadmin
-      - MINIO_ROOT_PASSWORD=minioadmin
+      - RUSTFS_ACCESS_KEY=storageadmin
+      - RUSTFS_SECRET_KEY=storageadmin
     tmpfs:
-      - /data
+      - /data:mode=1777
     ports:
       - "9100:9000"
     healthcheck:
-      test: ["CMD", "mc", "ready", "local"]
+      test: ["CMD", "curl", "-fs", "http://localhost:9000/health"]
       interval: 2s
       timeout: 3s
       retries: 15

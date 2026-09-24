@@ -61,6 +61,7 @@ make up
 | API | <http://localhost:8080> | routes are served under `/api` |
 | OpenAPI | <http://localhost:8080/api/openapi> | generated from the route definitions |
 | Mailpit | <http://localhost:8025> | catches every outbound email in development |
+| Storage | <http://localhost:9001/rustfs/console/> | RustFS, S3-compatible; `storageadmin` / `storageadmin` |
 | Postgres | `localhost:5432` | `postgres` / `postgres` |
 
 Redis runs three times, one instance per concern: sessions (6380), jobs (6379)
