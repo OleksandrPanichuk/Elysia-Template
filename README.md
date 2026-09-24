@@ -235,6 +235,21 @@ ignored, because anyone can send them: rate limits keyed by address would
 otherwise be defeated by varying the header, and session device information
 would record whatever the caller claimed.
 
+Request and job metrics go to CloudWatch when `CLOUDWATCH_METRICS_NAMESPACE`
+is set. The API aggregates them in memory and sends one `PutMetricData` call
+per flush, every `CLOUDWATCH_METRICS_FLUSH_SECONDS` (default 60), and once
+more on shutdown. Requests record `RequestCount` and `RequestDuration` by
+method, route template and status class; jobs record `JobCount` and
+`JobDuration` by job, queue and outcome (`done`, `retried`, `failed`). Every
+metric also carries `Environment`. Routes are recorded as templates such as
+`/api/sessions/:id`, so ids never become separate metrics, and every unknown
+path is grouped as `unmatched`.
+
+On ECS the SDK takes its credentials and region from the task role and the
+task's `AWS_REGION`; the task role needs `cloudwatch:PutMetricData`. A send
+that fails is logged with the number of datapoints dropped and never fails a
+request. Without a namespace, nothing is recorded.
+
 Unexpected errors are reported to Sentry when `SENTRY_DSN` is set: a 500 from
 any route, a background job whose last attempt failed, and a failed OAuth
 callback. Each report carries the request id, the signed-in user's id when

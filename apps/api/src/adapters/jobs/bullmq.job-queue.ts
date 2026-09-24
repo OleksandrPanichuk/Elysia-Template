@@ -6,6 +6,7 @@ import {
   Worker,
 } from "bullmq";
 
+import { make } from "@/core/registry";
 import { getLogger } from "@/infrastructure";
 import type { RedisConnection } from "@/infrastructure/redis";
 import type { Job } from "@/platform/jobs/job";
@@ -15,6 +16,7 @@ import {
   UnprocessableJobError,
 } from "@/platform/jobs/jobs.errors";
 import { JobQueue } from "@/platform/jobs/ports/job-queue";
+import { type JobOutcome, Metrics } from "@/platform/metrics/ports/metrics";
 
 const DEFAULT_ATTEMPTS = 5;
 const DEFAULT_BACKOFF_MS = 2_000;
@@ -115,6 +117,8 @@ export class BullMqJobQueue extends JobQueue {
   }
 
   private async run<T>(job: Job<T>, raw: BullJob): Promise<void> {
+    const startedAt = performance.now();
+
     const meta: JobMeta = {
       jobId: raw.id ?? "unknown",
       name: job.name,
@@ -131,18 +135,23 @@ export class BullMqJobQueue extends JobQueue {
       );
 
       job.failed(invalid, meta);
+      this.measure(job, "failed", startedAt);
 
       throw new UnrecoverableError(invalid.message);
     }
 
     try {
       await job.handle(result.data, meta);
+      this.measure(job, "done", startedAt);
     } catch (cause) {
       const unprocessable = cause instanceof UnprocessableJobError;
+      const final = unprocessable || meta.attempts >= (raw.opts.attempts ?? 1);
 
-      if (unprocessable || meta.attempts >= (raw.opts.attempts ?? 1)) {
+      if (final) {
         job.failed(cause, meta);
       }
+
+      this.measure(job, final ? "failed" : "retried", startedAt);
 
       if (unprocessable) {
         throw new UnrecoverableError(cause.message);
@@ -150,6 +159,19 @@ export class BullMqJobQueue extends JobQueue {
 
       throw cause;
     }
+  }
+
+  private measure<T>(
+    job: Job<T>,
+    outcome: JobOutcome,
+    startedAt: number,
+  ): void {
+    make(Metrics).recordJob({
+      job: job.name,
+      queue: job.queue,
+      outcome,
+      durationMs: Number((performance.now() - startedAt).toFixed(2)),
+    });
   }
 
   private queue(name: string): Queue {

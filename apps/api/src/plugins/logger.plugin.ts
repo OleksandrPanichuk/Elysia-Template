@@ -1,6 +1,9 @@
 import { Elysia } from "elysia";
 
+import { HttpStatus } from "@/core/http";
+import { make } from "@/core/registry";
 import { getLogger } from "@/infrastructure";
+import { Metrics, UNMATCHED_ROUTE } from "@/platform/metrics";
 import { enterRequestContext } from "@/shared";
 
 export const REQUEST_ID_HEADER = "x-request-id";
@@ -26,7 +29,7 @@ export const loggerPlugin = new Elysia({ name: "logger" })
     requestId: set.headers[REQUEST_ID_HEADER] ?? "",
     log: getLogger(),
   }))
-  .onAfterResponse(({ request, set }) => {
+  .onAfterResponse(({ request, set, route }) => {
     const startedAt = startTimes.get(request);
     startTimes.delete(request);
 
@@ -38,6 +41,11 @@ export const loggerPlugin = new Elysia({ name: "logger" })
       return;
     }
 
+    const durationMs =
+      startedAt === undefined
+        ? undefined
+        : Number((performance.now() - startedAt).toFixed(2));
+
     const level =
       code === undefined || code < 400 ? "info" : code < 500 ? "warn" : "error";
 
@@ -46,11 +54,18 @@ export const loggerPlugin = new Elysia({ name: "logger" })
         method: request.method,
         path,
         status,
-        ...(startedAt === undefined
-          ? {}
-          : { durationMs: Number((performance.now() - startedAt).toFixed(2)) }),
+        ...(durationMs === undefined ? {} : { durationMs }),
       },
       "request completed",
     );
+
+    if (durationMs === undefined) return;
+
+    make(Metrics).recordRequest({
+      method: request.method,
+      route: route || UNMATCHED_ROUTE,
+      status: code ?? HttpStatus.OK,
+      durationMs,
+    });
   })
   .as("global");
