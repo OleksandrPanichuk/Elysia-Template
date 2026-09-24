@@ -134,6 +134,15 @@ export const EnvSchema = z.object({
   GOOGLE_CLIENT_SECRET: z.string().min(1).optional(),
   GITHUB_CLIENT_ID: z.string().min(1).optional(),
   GITHUB_CLIENT_SECRET: z.string().min(1).optional(),
+
+  CLOUDWATCH_METRICS_NAMESPACE: z.preprocess(
+    emptyAsUnset,
+    z.string().trim().min(1).max(255).optional(),
+  ),
+  CLOUDWATCH_METRICS_FLUSH_SECONDS: z.preprocess(
+    emptyAsUnset,
+    z.coerce.number().int().min(10).max(300).default(60),
+  ),
 });
 
 type ParsedEnv = z.infer<typeof EnvSchema>;

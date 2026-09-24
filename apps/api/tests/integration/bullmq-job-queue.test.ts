@@ -4,11 +4,13 @@ import z from "zod";
 
 import type { MemoryErrorReporter } from "@/adapters/error-reporting/memory.error-reporter";
 import { BullMqJobQueue } from "@/adapters/jobs/bullmq.job-queue";
+import type { MemoryMetrics } from "@/adapters/metrics/memory.metrics";
 import { getEnv } from "@/configs";
 import { make } from "@/core/registry";
 import { createOwnedRedisConnection } from "@/infrastructure/redis";
 import { ErrorReporter } from "@/platform/error-reporting";
 import { Job } from "@/platform/jobs";
+import { Metrics } from "@/platform/metrics";
 
 const url = process.env.TEST_JOBS_REDIS_URL;
 
@@ -106,6 +108,14 @@ describe.skipIf(!queue)("BullMqJobQueue against a real Redis", () => {
     await settle(() => handled.includes("hello"));
 
     expect(handled).toContain("hello");
+
+    const jobs = () => (make(Metrics) as MemoryMetrics).jobs();
+
+    await settle(() => jobs().some(({ job }) => job === "test.probe"));
+
+    expect(jobs().find(({ job }) => job === "test.probe")?.outcome).toBe(
+      "done",
+    );
   });
 
   test("refuses a second handler for the same job", () => {
@@ -149,6 +159,12 @@ describe.skipIf(!queue)("BullMqJobQueue against a real Redis", () => {
 
     expect(failedAttempts).toHaveLength(2);
     expect(reporter.reports()).toHaveLength(1);
+    const outcomes = (make(Metrics) as MemoryMetrics)
+      .jobs()
+      .filter(({ job }) => job === "test.failing")
+      .map(({ outcome }) => outcome);
+
+    expect(outcomes).toEqual(["retried", "failed"]);
     expect(reporter.reports()[0]?.report).toMatchObject({
       source: "job",
       tags: { job: "test.failing", queue: "test-failing-queue" },

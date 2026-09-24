@@ -56,7 +56,7 @@ infrastructure/<tech>/   technology clients: connect, reconnect, ping, close
 ```
 
 - **`platform/`** holds what the app offers to modules rather than to users:
-  `cache`, `jobs`, `rate-limit`, `health`, `captcha`, `error-reporting`. The test is "does it have a domain?" —
+  `cache`, `jobs`, `rate-limit`, `health`, `captcha`, `error-reporting`, `metrics`. The test is "does it have a domain?" —
   an entity, a repository, a use case or a route about the product belongs in
   `modules/`; a port plus a `defineModule` lifecycle that any module may consume
   belongs in `platform/`. Both go through `defineModule`, so a platform folder
@@ -97,6 +97,17 @@ adapters/sessions/   redis.session-store.ts
 adapters/jobs/       bullmq.job-queue.ts   memory.job-queue.ts
 adapters/cache/      redis.cache.ts        memory.cache.ts
 adapters/storage/    s3.storage.ts         memory.storage.ts
+```
+
+An adapter that outgrows one file gets a folder named after the technology,
+with the class alone in `<tech>.<port>.ts` and its pieces beside it:
+`<tech>.typedefs.ts`, `<tech>.helpers.ts`, `<tech>.constants.ts`, and an
+`index.ts` the module definition imports. Constants that only the adapter
+needs, such as a vendor's request limits, live there and not in the platform
+folder:
+
+```
+adapters/metrics/    cloudwatch/    memory.metrics.ts    noop.metrics.ts
 ```
 
 Siblings in one folder are the alternatives you pick between in `register()`,

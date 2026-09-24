@@ -12,11 +12,13 @@ import { databaseModule } from "@/platform/database";
 import { errorReportingModule } from "@/platform/error-reporting";
 import { healthModule } from "@/platform/health";
 import { jobsModule } from "@/platform/jobs";
+import { metricsModule } from "@/platform/metrics";
 import { rateLimitModule } from "@/platform/rate-limit";
 import { storageModule } from "@/platform/storage";
 
 export const modules = [
   errorReportingModule,
+  metricsModule,
   databaseModule,
   healthModule,
   sessionsModule,

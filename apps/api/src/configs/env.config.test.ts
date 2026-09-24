@@ -61,3 +61,12 @@ describe("captcha settings in the environment", () => {
     ).toBe(0.7);
   });
 });
+
+describe("metrics settings in the environment", () => {
+  test("treat an empty namespace as unset and default the flush interval", () => {
+    const env = loadEnv({ ...base, CLOUDWATCH_METRICS_NAMESPACE: "" });
+
+    expect(env.CLOUDWATCH_METRICS_NAMESPACE).toBeUndefined();
+    expect(env.CLOUDWATCH_METRICS_FLUSH_SECONDS).toBe(60);
+  });
+});
