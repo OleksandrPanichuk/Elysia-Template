@@ -8,7 +8,8 @@
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "generate": "turbo run generate",
     "lint": "turbo run lint",
-    "test": "turbo run test"
+    "test": "turbo run test",
+    "gen": "bun cli-tools/generator/src/main.ts"
   },
   "devDependencies": {
     "prettier": "3.9.8",

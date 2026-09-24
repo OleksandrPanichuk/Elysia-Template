@@ -1,7 +1,12 @@
 
-.PHONY: build test test-integration test-down logs migrate sh up up-db run-all add drop services down reset check generate db-generate db-migrate seed db-studio db-development db-shell
+.PHONY: build test test-integration test-down logs migrate sh up up-db run-all add drop services down reset check generate gen db-generate db-migrate seed db-studio db-development db-shell
 
 OPTIONAL_SERVICES := bull_board drizzle_studio
+
+ifeq (gen,$(firstword $(MAKECMDGOALS)))
+GEN_ARGS := $(wordlist 2,$(words $(MAKECMDGOALS)),$(MAKECMDGOALS))
+$(eval $(GEN_ARGS):;@:)
+endif
 ALL_PROFILES := $(shell echo '$(OPTIONAL_SERVICES)' | tr ' ' ',')
 
 DB_URL ?= postgres://postgres:postgres@localhost:5432/postgres
@@ -88,6 +93,9 @@ check:
 	bun run lint
 	bun run check-types
 	bun run test
+
+gen:
+	@bun run gen $(GEN_ARGS) $(ARGS)
 
 generate:
 	bun run generate

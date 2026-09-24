@@ -141,6 +141,48 @@ Path parameters are call arguments: `api.api.auth.oauth("google").get()`.
 `@repo/api-client/server` exposes `createServerApiClient`, which forwards a
 cookie header instead of relying on the browser's cookie jar.
 
+## Generating code
+
+`bun run gen` scaffolds code that follows the conventions in `CLAUDE.md`, then
+runs `eslint --fix` on everything it touched.
+
+```sh
+bun run gen module billing                  # empty module, registered in app.modules.ts
+bun run gen resource invoices               # full CRUD module, see below
+bun run gen service billing pricing         # services, use cases and jobs go
+bun run gen use-case billing charge-card    # into an existing module and are
+bun run gen job billing send-receipt        # exported from its barrel
+bun run gen plugin audit-trail              # src/plugins, exported from the index
+bun run gen resource invoices --dry-run     # print the plan, write nothing
+```
+
+`make gen` takes the same words. Flags go in `ARGS`, because `make` reads
+anything starting with `--` as its own option:
+
+```sh
+make gen resource invoices
+make gen resource invoices ARGS="--db mongo --dry-run"
+```
+
+A **resource** is a module with an entity, a model, create and update DTOs, a
+repository port and its adapter, a service, five use cases (create, get, list,
+update, delete), their routes, and the module definition, registered before
+`jobsModule`. Every route needs a session and every query is scoped to the
+signed-in user through an `ownerId` column, so one user never sees another's
+records. Pass the plural; the singular is guessed, and `--singular` overrides
+it (`gen resource people --singular person`).
+
+The repository adapter follows `DATABASE_ADAPTER` in the root `.env` (see
+`.env.example`), `--db` overrides it, and it defaults to `postgres`. For
+postgres the resource also gets a Drizzle schema exported from
+`src/db/schema`, a migration generated with drizzle-kit (`--no-migration`
+skips it) and an HTTP test in `apps/api/tests`. For any other value the
+repository is a stub whose methods reject until implemented, and no schema,
+migration or test is generated.
+
+Pieces that need wiring by hand are printed as notes: registering a generated
+job with `registerJob`, and mounting a generated plugin.
+
 ## Database
 
 Migrations live in `apps/api/drizzle` and are managed by Drizzle Kit.
