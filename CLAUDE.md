@@ -276,6 +276,16 @@ The `ErrorReporter` port lives in `core`, not in `platform/error-reporting`,
 because `Injectable` is in `core` and `core` never imports `platform`. The
 platform folder still owns the lifecycle and picks the adapter.
 
+## Generating code
+
+`cli-tools/generator` (`bun run gen`) scaffolds modules, resources, services,
+use cases, jobs and plugins from templates in
+`cli-tools/generator/src/templates`. Those templates are this document in code:
+when a convention here changes, change the template in the same pull request,
+or every generated module starts out of date. `commands.test.ts` pins the plan
+each command produces; generate a resource in a throwaway worktree and run
+lint, types and its tests to check a template change end to end.
+
 ## Tests
 
 `bun test` sets `NODE_ENV=test`, so every port resolves to its memory adapter

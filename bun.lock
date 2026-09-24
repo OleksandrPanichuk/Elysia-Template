@@ -52,6 +52,17 @@
         "typescript": "6.0.3",
       },
     },
+    "cli-tools/generator": {
+      "name": "@repo/generator",
+      "version": "0.0.0",
+      "devDependencies": {
+        "@repo/eslint-config": "*",
+        "@repo/typescript-config": "*",
+        "@types/bun": "^1.4.2",
+        "eslint": "10.11.0",
+        "typescript": "6.0.3",
+      },
+    },
     "packages/api-client": {
       "name": "@repo/api-client",
       "version": "0.0.0",
@@ -324,6 +335,8 @@
     "@repo/api-codegen": ["@repo/api-codegen@workspace:cli-tools/api-codegen"],
 
     "@repo/eslint-config": ["@repo/eslint-config@workspace:packages/eslint-config"],
+
+    "@repo/generator": ["@repo/generator@workspace:cli-tools/generator"],
 
     "@repo/typescript-config": ["@repo/typescript-config@workspace:packages/typescript-config"],
 
