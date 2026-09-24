@@ -12,7 +12,7 @@ const reports = () => (make(ErrorReporter) as MemoryErrorReporter).reports();
 
 class ProbeService extends Service {
   public fail(error: Error): void {
-    this.report(error, { tags: { step: "charge" } });
+    this.captureException(error, { tags: { step: "charge" } });
   }
 }
 
@@ -26,7 +26,7 @@ class ProbeJob extends Job<{ value: string }> {
   }
 }
 
-describe("this.report", () => {
+describe("this.captureException", () => {
   test("names the class as the source and picks up the request id", () => {
     const error = new Error("boom");
 

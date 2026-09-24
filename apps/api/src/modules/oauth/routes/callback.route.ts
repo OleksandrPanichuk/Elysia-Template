@@ -1,6 +1,6 @@
 import { t } from "elysia";
 
-import { reportError } from "@/core/error-reporting";
+import { captureException } from "@/core/error-reporting";
 import { AppError } from "@/core/errors";
 import { HttpStatus } from "@/core/http";
 import { defineRoute } from "@/core/route";
@@ -109,7 +109,7 @@ export const callbackRoute = ({
             "oauth callback failed",
           );
 
-          reportError(error, {
+          captureException(error, {
             source: "oauth-callback",
             tags: { provider: params.provider },
           });

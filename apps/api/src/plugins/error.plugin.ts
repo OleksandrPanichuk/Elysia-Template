@@ -1,7 +1,7 @@
 import { Elysia } from "elysia";
 
 import type { AuthUser } from "@/core/auth";
-import { reportError } from "@/core/error-reporting";
+import { captureException } from "@/core/error-reporting";
 import { AppError } from "@/core/errors";
 import { HttpStatus } from "@/core/http";
 import { getLogger } from "@/infrastructure";
@@ -51,7 +51,7 @@ export const errorPlugin = new Elysia({ name: "errors" })
       "unhandled error",
     );
 
-    reportError(error, {
+    captureException(error, {
       source: "http",
       requestId,
       userId,
