@@ -241,10 +241,11 @@ never waits on a clock.
 ## Reporting errors
 
 Anything that extends `Injectable` (services, use cases, jobs) reports an
-unexpected error with `this.report(error, { tags, extra })`. The source
+unexpected error with `this.captureException(error, { tags, extra })`. The source
 defaults to the class name and the request id is taken from the request
 context, so a call site carries only what is specific to it. Code that is not
-a class, such as a route or a plugin, calls `reportError(error, { source })`.
+a class, such as a route or a plugin, calls `captureException(error, { source })`
+from `@/core/error-reporting`.
 Report what the app did not expect, not what it answers on purpose: an
 `AppError` is a response, not an incident.
 

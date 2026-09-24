@@ -21,7 +21,7 @@ export abstract class ErrorReporter {
   }
 }
 
-export const reportError = (error: unknown, report: ErrorReport): void => {
+export const captureException = (error: unknown, report: ErrorReport): void => {
   make(ErrorReporter).report(error, {
     requestId: getRequestContext()?.requestId,
     ...report,
