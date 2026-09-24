@@ -1,3 +1,5 @@
+import { Port } from "@/core/port";
+
 export interface RequestMeasurement {
   method: string;
   route: string;
@@ -14,7 +16,7 @@ export interface JobMeasurement {
   durationMs: number;
 }
 
-export abstract class Metrics {
+export abstract class Metrics extends Port {
   public abstract recordRequest(measurement: RequestMeasurement): void;
 
   public abstract recordJob(measurement: JobMeasurement): void;

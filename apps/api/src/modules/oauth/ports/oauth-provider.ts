@@ -1,3 +1,4 @@
+import { Port } from "@/core/port";
 import type { AccountType } from "@/db";
 
 import type { OAuthProviderName } from "../oauth.constants";
@@ -24,7 +25,7 @@ export interface OAuthIdentity {
   avatarUrl: string | null;
 }
 
-export abstract class OAuthProvider {
+export abstract class OAuthProvider extends Port {
   public abstract readonly name: OAuthProviderName;
 
   public abstract readonly accountType: AccountType;

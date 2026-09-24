@@ -4,6 +4,8 @@ import { Elysia } from "elysia";
 import { modules } from "@/app.modules";
 
 export const createOpenApiApp = () => {
+  modules.forEach((module) => module.register());
+
   const base = new Elysia({ name: "api", prefix: "/api" }).use(openapi());
 
   const withPlugins = modules.reduce(

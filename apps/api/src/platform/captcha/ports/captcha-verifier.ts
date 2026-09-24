@@ -1,3 +1,5 @@
+import { Port } from "@/core/port";
+
 export type CaptchaKind = "score" | "challenge";
 
 export type CaptchaVerdict = "pass" | "challenge" | "fail";
@@ -9,6 +11,6 @@ export interface CaptchaVerifyInput {
   ip: string | null;
 }
 
-export abstract class CaptchaVerifier {
+export abstract class CaptchaVerifier extends Port {
   public abstract verify(input: CaptchaVerifyInput): Promise<CaptchaVerdict>;
 }
