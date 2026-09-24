@@ -25,8 +25,8 @@ test-integration:
 	 TEST_MAILPIT_URL=http://localhost:8125 \
 	 TEST_S3_ENDPOINT=http://localhost:9100 \
 	 TEST_S3_BUCKET=test-bucket \
-	 TEST_S3_ACCESS_KEY_ID=minioadmin \
-	 TEST_S3_SECRET_ACCESS_KEY=minioadmin \
+	 TEST_S3_ACCESS_KEY_ID=storageadmin \
+	 TEST_S3_SECRET_ACCESS_KEY=storageadmin \
 	 bun run test
 
 test-down:
