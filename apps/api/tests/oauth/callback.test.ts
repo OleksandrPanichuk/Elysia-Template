@@ -2,10 +2,12 @@ import { completeOAuth, createGuest, useOAuthIdentity } from "@tests/helpers";
 import { afterEach, describe, expect, spyOn, test } from "bun:test";
 import { pino } from "pino";
 
+import type { MemoryErrorReporter } from "@/adapters/error-reporting/memory.error-reporter";
 import { make } from "@/core/registry";
 import { getLogger, setLogger } from "@/infrastructure";
 import { OAuthProviderName } from "@/modules/oauth";
 import { UsersRepository } from "@/modules/users";
+import { ErrorReporter } from "@/platform/error-reporting";
 
 const { Google } = OAuthProviderName;
 
@@ -48,6 +50,13 @@ describe("callback failures", () => {
       );
       expect(failure).toBeDefined();
       expect(failure).toContain('"provider":"google"');
+
+      const reports = (make(ErrorReporter) as MemoryErrorReporter).reports();
+
+      expect(reports).toHaveLength(1);
+      expect(reports[0]?.report.source).toBe("oauth-callback");
+      expect(reports[0]?.report.tags).toEqual({ provider: "google" });
+      expect(reports[0]?.report.requestId).toBeString();
     } finally {
       logs.restore();
     }

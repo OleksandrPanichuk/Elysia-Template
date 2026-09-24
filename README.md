@@ -235,6 +235,14 @@ ignored, because anyone can send them: rate limits keyed by address would
 otherwise be defeated by varying the header, and session device information
 would record whatever the caller claimed.
 
+Unexpected errors are reported to Sentry when `SENTRY_DSN` is set: a 500 from
+any route, a background job whose last attempt failed, and a failed OAuth
+callback. Each report carries the request id, the signed-in user's id when
+there is one, and the route or job name. No request data, headers, cookies or
+bodies are sent. Without a DSN errors are only logged. `SENTRY_ENVIRONMENT`
+defaults to `NODE_ENV`; set `SENTRY_RELEASE` to the deployed version to tie
+errors to a release.
+
 Sign-up, sign-in and the two token emails are protected by reCAPTCHA: v3
 (invisible, scored) first, falling back to the v2 checkbox when the score is
 low. Set `RECAPTCHA_V3_SECRET` and `RECAPTCHA_V2_SECRET` from two separate

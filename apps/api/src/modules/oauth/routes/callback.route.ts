@@ -1,5 +1,6 @@
 import { t } from "elysia";
 
+import { reportError } from "@/core/error-reporting";
 import { AppError } from "@/core/errors";
 import { HttpStatus } from "@/core/http";
 import { defineRoute } from "@/core/route";
@@ -107,6 +108,11 @@ export const callbackRoute = ({
             { err: error, provider: params.provider },
             "oauth callback failed",
           );
+
+          reportError(error, {
+            source: "oauth-callback",
+            tags: { provider: params.provider },
+          });
         }
 
         return {

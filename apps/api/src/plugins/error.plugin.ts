@@ -1,5 +1,7 @@
 import { Elysia } from "elysia";
 
+import type { AuthUser } from "@/core/auth";
+import { reportError } from "@/core/error-reporting";
 import { AppError } from "@/core/errors";
 import { HttpStatus } from "@/core/http";
 import { getLogger } from "@/infrastructure";
@@ -8,7 +10,9 @@ import { getRequestContext } from "@/shared";
 const INTERNAL_ERROR_MESSAGE = "Something went wrong";
 
 export const errorPlugin = new Elysia({ name: "errors" })
-  .onError(({ code, error, set, request }) => {
+  .onError((context) => {
+    const { code, error, set, request } = context;
+
     if (code === "VALIDATION") {
       set.status = HttpStatus.UnprocessableEntity;
       return {
@@ -38,16 +42,21 @@ export const errorPlugin = new Elysia({ name: "errors" })
 
     const requestId = getRequestContext()?.requestId;
 
+    const method = request.method;
+    const path = new URL(request.url).pathname;
+    const userId = (context as { user?: AuthUser }).user?.id;
+
     getLogger().error(
-      {
-        method: request.method,
-        path: new URL(request.url).pathname,
-        code,
-        requestId,
-        err: error,
-      },
+      { method, path, code, requestId, err: error },
       "unhandled error",
     );
+
+    reportError(error, {
+      source: "http",
+      requestId,
+      userId,
+      tags: { method, path },
+    });
 
     set.status = HttpStatus.InternalServerError;
     return {

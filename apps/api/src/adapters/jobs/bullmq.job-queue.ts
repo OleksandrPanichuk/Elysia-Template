@@ -115,14 +115,6 @@ export class BullMqJobQueue extends JobQueue {
   }
 
   private async run<T>(job: Job<T>, raw: BullJob): Promise<void> {
-    const result = job.schema.safeParse(raw.data);
-
-    if (!result.success) {
-      throw new UnrecoverableError(
-        `Invalid payload for job "${job.name}": ${result.error.message}`,
-      );
-    }
-
     const meta: JobMeta = {
       jobId: raw.id ?? "unknown",
       name: job.name,
@@ -130,10 +122,29 @@ export class BullMqJobQueue extends JobQueue {
       attempts: raw.attemptsMade + 1,
     };
 
+    const result = job.schema.safeParse(raw.data);
+
+    if (!result.success) {
+      const invalid = new UnprocessableJobError(
+        `Invalid payload for job "${job.name}": ${result.error.message}`,
+        result.error,
+      );
+
+      job.failed(invalid, meta);
+
+      throw new UnrecoverableError(invalid.message);
+    }
+
     try {
       await job.handle(result.data, meta);
     } catch (cause) {
-      if (cause instanceof UnprocessableJobError) {
+      const unprocessable = cause instanceof UnprocessableJobError;
+
+      if (unprocessable || meta.attempts >= (raw.opts.attempts ?? 1)) {
+        job.failed(cause, meta);
+      }
+
+      if (unprocessable) {
         throw new UnrecoverableError(cause.message);
       }
 

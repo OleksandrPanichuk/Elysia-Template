@@ -9,12 +9,14 @@ import { verificationTokensModule } from "@/modules/verification-tokens";
 import { cacheModule } from "@/platform/cache";
 import { captchaModule } from "@/platform/captcha";
 import { databaseModule } from "@/platform/database";
+import { errorReportingModule } from "@/platform/error-reporting";
 import { healthModule } from "@/platform/health";
 import { jobsModule } from "@/platform/jobs";
 import { rateLimitModule } from "@/platform/rate-limit";
 import { storageModule } from "@/platform/storage";
 
 export const modules = [
+  errorReportingModule,
   databaseModule,
   healthModule,
   sessionsModule,
