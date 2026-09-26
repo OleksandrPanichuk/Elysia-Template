@@ -47,6 +47,16 @@ const paths = {
       responses: response,
     },
   },
+  "/api/problems/{slug}/events": {
+    get: {
+      parameters: [{ name: "slug", in: "path", required: true }],
+      responses: {
+        "200": {
+          content: { "text/event-stream": { schema: { type: "string" } } },
+        },
+      },
+    },
+  },
   "/api/problems/{slug}": {
     get: {
       parameters: [{ name: "slug", in: "path", required: true }],
@@ -75,5 +85,10 @@ describe("renderRoutes", () => {
     const slugRoute = rendered.slice(rendered.indexOf("(slug:"));
 
     expect(slugRoute).not.toContain("query:");
+  });
+
+  test("leaves event streams out, since the client reads whole bodies", () => {
+    expect(rendered).not.toContain("events:");
+    expect(rendered).not.toContain("/events");
   });
 });

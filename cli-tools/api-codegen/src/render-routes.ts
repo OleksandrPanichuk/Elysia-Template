@@ -125,6 +125,15 @@ const successSchema = (operation: Operation): OpenApiSchema | undefined => {
   return undefined;
 };
 
+const EVENT_STREAM_CONTENT = "text/event-stream";
+
+const isEventStream = (operation: Operation): boolean =>
+  Object.entries(operation.responses ?? {}).some(
+    ([status, response]) =>
+      status.startsWith("2") &&
+      response.content?.[EVENT_STREAM_CONTENT] !== undefined,
+  );
+
 const bodySchema = (operation: Operation): OpenApiSchema | undefined =>
   operation.requestBody?.content?.[JSON_CONTENT]?.schema;
 
@@ -313,7 +322,7 @@ export const renderRoutes = (paths: Record<string, PathItem>): string => {
 
       const operation = item[method];
 
-      if (!operation) continue;
+      if (!operation || isEventStream(operation)) continue;
 
       const body = bodySchema(operation);
       const response = successSchema(operation);

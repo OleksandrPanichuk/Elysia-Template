@@ -281,6 +281,11 @@ for local development.
 each port falls back to an in-memory adapter so the whole app boots in-process
 with no external services.
 
+`RATE_LIMIT_REDIS_URL` and `REALTIME_REDIS_URL` are optional and only move a
+concern to another server: rate-limit counters default to the sessions Redis,
+which neither evicts nor loses them on a cache flush, and realtime pub/sub
+defaults to the cache Redis, since it stores nothing.
+
 Behind a proxy, set `TRUSTED_PROXY_HEADER` to the header that proxy sets and
 `TRUSTED_PROXY_DEPTH` to how many proxies stand between the client and the API.
 Until you do, the client address comes from the socket and forwarded headers are
