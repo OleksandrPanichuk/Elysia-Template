@@ -331,6 +331,53 @@ unavailable connection and a malformed entry as a miss and never throws.
 Cached values are validated by a schema on read, because JSON round-trips turn
 `Date` into `string`.
 
+## Pagination
+
+Lists are paginated by cursor, never by offset: a cursor is the position of the
+last row a client saw, so a page stays correct while rows are inserted or
+deleted before it. The pieces, one per layer:
+
+```ts
+query: PageQuery,
+response: PageModel(ProblemModel),
+action: ({ user, query }) =>
+  listProblems.execute({ ownerId: user.id, page: toPageRequest(query) }),
+postAction: ({ output }) => mapPage(output, ProblemEntity.normalize),
+```
+
+A route that filters as well spreads the page fields into its own query:
+`t.Object({ ...PageQueryFields, track: t.Optional(TrackSchema) })`.
+`PageModel(item)` answers `{ items, nextCursor: string | null }`.
+
+```ts
+const BY_CREATION = new Keyset<ProblemEntity>({
+  sort: problemsSchema.createdAt,
+  id: problemsSchema.id,
+  key: (problem) => [problem.createdAt, problem.id],
+});
+
+const rows = await this.db
+  .select()
+  .from(problemsSchema)
+  .where(and(eq(problemsSchema.ownerId, ownerId), BY_CREATION.after(request.cursor)))
+  .orderBy(...BY_CREATION.orderBy())
+  .limit(BY_CREATION.limit(request));
+
+return BY_CREATION.page(rows, request);
+```
+
+- `PageQuery`, `PageModel`, `PageRequest`, `Page<T>`, `toPageRequest` and
+  `mapPage` live in `@/core/pagination`; `Keyset` in `@/db/pagination`.
+- A use case takes a `PageRequest` inside its own options; the route converts
+  the query with `toPageRequest`, which applies the default limit (20, max 100).
+- `Keyset` orders by one not-null column and a unique tie-breaker, and fetches
+  one row more than the page to know whether another follows. Timestamps are
+  compared at millisecond precision: Postgres stores microseconds and a `Date`
+  keeps milliseconds, so the raw column would skip or repeat rows inside one
+  millisecond.
+- The cursor is opaque base64url. A malformed one answers
+  `400 INVALID_CURSOR`, never a 500.
+
 ## Generated API client
 
 `packages/api-client/src/generated` is not committed. It is produced by
