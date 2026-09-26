@@ -137,6 +137,15 @@ console.log(data.userId, data.expiresAt);
 Route segments are camelCased from the URL (`/api/auth/sign-in` becomes
 `api.auth.signIn`), so `url` is the server's origin without the `/api` prefix.
 Path parameters are call arguments: `api.api.auth.oauth("google").get()`.
+Query parameters go in the options, typed from the route's `query` schema, and
+are required there when the route requires one:
+
+```ts
+const page = await api.api.problems.get({ query: { limit: 20 } });
+const next = await api.api.problems.get({
+  query: { limit: 20, cursor: page.data!.nextCursor! },
+});
+```
 
 `@repo/api-client/server` exposes `createServerApiClient`, which forwards a
 cookie header instead of relying on the browser's cookie jar.
