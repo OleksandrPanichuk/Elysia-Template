@@ -12,7 +12,7 @@
     "@repo/eslint-config": "*",
     "@repo/typescript-config": "*",
     "@types/bun": "^1.4.2",
-    "eslint": "10.11.0",
+    "eslint": "10.12.0",
     "typescript": "6.0.3"
   }
 }
