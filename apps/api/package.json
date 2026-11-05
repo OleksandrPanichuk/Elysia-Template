@@ -19,11 +19,11 @@
   "dependencies": {
     "@aws-sdk/client-cloudwatch": "^3.1140.0",
     "@elysia/cors": "^1.4.2",
-    "@elysiajs/openapi": "1.4.16",
+    "@elysiajs/openapi": "1.4.17",
     "@sentry/bun": "^11.0.0",
     "bullmq": "^6.3.4",
     "drizzle-orm": "^0.45.2",
-    "elysia": "1.4.30",
+    "elysia": "1.4.31",
     "elysia-nazli": "^1.0.0",
     "ioredis": "^6.0.0",
     "jose": "^6.2.12",
@@ -35,10 +35,10 @@
   "devDependencies": {
     "@repo/eslint-config": "*",
     "@repo/typescript-config": "*",
-    "@types/bun": "1.4.2",
+    "@types/bun": "1.4.4",
     "@types/nodemailer": "^8.0.1",
     "drizzle-kit": "^0.31.10",
-    "eslint": "10.11.0",
+    "eslint": "10.14.0",
     "pg": "^8.23.0",
     "typescript": "6.0.3"
   },
