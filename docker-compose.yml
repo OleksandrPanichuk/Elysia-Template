@@ -74,7 +74,7 @@ services:
       retries: 15
 
   db:
-    image: postgres:18-alpine
+    image: postgres:19-alpine
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
